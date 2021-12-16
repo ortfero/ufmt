@@ -17,7 +17,7 @@ int main() {
 
   auto const texter_char = ubench::run([&]{ text.clear(); text.format('a'); });
   auto const snprintf_char = ubench::run([&]{ snprintf(charz, sizeof (charz), "%c", 'a'); });
-  auto const fmt_char = ubench::run([&]{ fmt::format("{}", 'a'); });
+  auto const fmt_char = ubench::run([&]{ fmt::format_to(charz, "{}", 'a'); });
 
   cout << "texter.print(char) - " << texter_char << '\n';
   cout << "snprintf(char)     - " << snprintf_char << '\n';
@@ -26,7 +26,7 @@ int main() {
 
   auto const texter_literal = ubench::run([&]{ text.clear(); text.format("some literal"); });
   auto const snprintf_literal = ubench::run([&]{ snprintf(charz, sizeof (charz), "%s", "some literal"); });
-  auto const fmt_literal = ubench::run([&]{ fmt::format("{}", "some literal"); });
+  auto const fmt_literal = ubench::run([&]{ fmt::format_to(charz, "{}", "some literal"); });
 
   cout << "texter.print(char[N]) - " << texter_literal << '\n';
   cout << "snprintf(char[N])     - " << snprintf_literal << '\n';
@@ -35,7 +35,7 @@ int main() {
 
   auto const texter_int = ubench::run([&]{ text.clear(); text.format(-127562); });
   auto const snprintf_int = ubench::run([&]{ snprintf(charz, sizeof (charz), "%d", -127562); });
-  auto const fmt_int = ubench::run([&]{ fmt::format( "{}", -127562); });
+  auto const fmt_int = ubench::run([&]{ fmt::format_to(charz,  "{}", -127562); });
   auto const tochars_int = ubench::run([&] { std::to_chars(charz, charz + sizeof(charz), -127562); });
 
   cout << "texter.print(int)  - " << texter_int << '\n';
@@ -46,7 +46,7 @@ int main() {
 
   auto const texter_double = ubench::run([&]{ text.clear(); text.format(-127562.127562); });
   auto const snprintf_double = ubench::run([&]{ snprintf(charz, sizeof (charz), "%f", -127562.127562); });
-  auto const fmt_double = ubench::run([&]{ fmt::format( "{}", -127562.127562); });
+  auto const fmt_double = ubench::run([&]{ fmt::format_to(charz,  "{}", -127562.127562); });
 
 
   cout << "texter.print(double)  - " << texter_double << '\n';

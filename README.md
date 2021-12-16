@@ -170,22 +170,22 @@ template<typename S> S& operator << (S& stream, point const& p) {
 
 | Code                                                         | Time (ns) | Ratio |
 |--------------------------------------------------------------|----------:|------:|
-| ```text.format('a');```                                     | 0.5       | x1    |
-| ```snprintf(charz, sizeof (charz), "%c", 'a');```            | 25.9      | x51   |
-| ```fmt::format(charz, "{}", 'a');```                      | 8.4       | x16   |
-| ```texter::format("some literal");```                          | 0.5       | x1    |
-| ```snprintf(charz, sizeof (charz), "%s", "some literal");``` | 51.0      | x102  |
-| ```fmt::format(charz, "{}", "some literal");```           | 14.4      | x28   |
-| ```texter::format(-127562);```                                 | 1.9       | x1    |
-| ```snprintf(charz, sizeof (charz), "%d", -127562);```        | 44.2      | x23   |
-| ```fmt::format_to(charz, "{}", -127562);```                  | 14.5      | x7    |
-| ```std::to_chars(charz, charz + sizeof charz, -127562);```   | 0.8       | x0.4  |
-| ```texter::format(-127562.127562);```                          | 1.9       | x1    |
-| ```snprintf(charz, sizeof (charz), "%f", -127562.127562);``` | 433.5     | x228  |
-| ```fmt::format(charz, "{}", -127562.127562);```           | 57.0      | x30   |
+| ```text.format('a');```                                      | 7.7       | x1    |
+| ```snprintf(charz, sizeof (charz), "%c", 'a');```            | 38.4      | x5    |
+| ```fmt::format_to(charz, "{}", 'a');```                      | 13.8      | x1.8  |
+| ```text.format("some literal");```                           | 11.1      | x1    |
+| ```snprintf(charz, sizeof (charz), "%s", "some literal");``` | 38.4      | x3.4  |
+| ```fmt::format_to(charz, "{}", "some literal");```           | 13.6      | x1.2  |
+| ```text.format(-127562);```                                  | 13.9      | x1    |
+| ```snprintf(charz, sizeof (charz), "%d", -127562);```        | 58.9      | x4.2  |
+| ```fmt::format_to(charz, "{}", -127562);```                  | 15.9      | x1.1  |
+| ```std::to_chars(charz, charz + sizeof charz, -127562);```   | 8.2       | x0.6  |
+| ```text.format(-127562.127562);```                           | 45.3      | x1    |
+| ```snprintf(charz, sizeof (charz), "%f", -127562.127562);``` | 237.0     | x5.2  |
+| ```fmt::format_to(charz, "{}", -127562.127562);```           | 88.5      | x1.9  |
 
 ```
-gcc version 10.3.0, fmtlib 8.0.1
+msvc version 19.29, fmtlib 8.0.1
 ```
 
 ## License
