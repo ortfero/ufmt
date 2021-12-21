@@ -179,13 +179,6 @@ namespace ufmt {
     }
     
     
-    /*template<class S>
-    basic_text<S>& operator << (basic_text<S>& self, typename S::value_type const* stringz) {
-        return self.append(stringz, 
-                           std::char_traits<typename S::value_type>::length(stringz));
-    }*/
-    
-    
     template<class S>
     basic_text<S>& operator << (basic_text<S>& self, std::string_view sv) {
         return self.append(sv.data(), sv.size());
