@@ -122,7 +122,7 @@ namespace ufmt {
 
 #if defined(_WIN32)
         WriteFile(
-            GetStdHandle(STD_OUTPUT_HANDLE),
+            GetStdHandle((DWORD)-11),
             detail::printer::buffer.data(),
             detail::printer::buffer.size(),
             nullptr,
@@ -145,12 +145,12 @@ namespace ufmt {
     void error(Args&&... args) {
         std::unique_lock g {detail::printer::sync};
         detail::printer::buffer.clear();
-        detail::printer::buffer.print(std::forward<Args>(args)..., '\n');
+        detail::printer::buffer.format(std::forward<Args>(args)..., '\n');
 
 #if defined(_WIN32)
 
         WriteFile(
-            GetStdHandle(STD_ERROR_HANDLE),
+            GetStdHandle((DWORD)-12),
             detail::printer::buffer.data(),
             detail::printer::buffer.size(),
             nullptr,
