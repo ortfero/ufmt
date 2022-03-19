@@ -28,6 +28,10 @@
 #include <string_view>
 #include <vector>
 
+#if defined(_MSC_VER)
+#include <cstdio>
+#endif
+
 
 namespace ufmt {
 
@@ -206,6 +210,24 @@ namespace ufmt {
                 return self;
             auto const r = std::to_chars(p, p + N, value);
             self.free(r.ptr);
+            
+            return self;
+        }
+
+
+        template<std::size_t N, class S>
+        basic_text<S>& print_number(basic_text<S>& self, double value) {
+            typename S::value_type* p = self.allocate(N);
+            if(!p)
+                return self;
+#if defined(_MSC_VER)
+            auto const r = std::to_chars(p, p + N, value);
+            self.free(r.ptr);
+#else
+            auto const n = std::snprintf(p, N, "%g", value);
+            if(n < 0) self.free(p); else self.free(p + n);
+#endif
+            
             return self;
         }
         
@@ -325,9 +347,14 @@ namespace ufmt {
             typename S::value_type* p = self.allocate(float_digits);
             if(!p)
                 return self;
+        #if defined(_MSC_VER)
             auto const r = std::to_chars(p, p + float_digits, f.value, 
                                          std::chars_format::fixed, f.precision);
             self.free(r.ptr);
+        #else
+            auto const n = std::snprintf(p, float_digits, "%.*f", f.precision, f.value);
+            if(n <= 0) self.free(p); else self.free(p + n); 
+        #endif
             return self;
         }
         

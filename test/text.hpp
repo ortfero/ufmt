@@ -92,6 +92,4 @@ TEST_SUITE("text") {
         REQUIRE_EQ(ufmt::text::of(right(-1, 4)).string(), "  -1");
         REQUIRE_EQ(ufmt::text::of(right(-10, 2)).string(), "-10");
     }
-
-
 }
