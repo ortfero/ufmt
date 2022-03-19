@@ -6,13 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(ufmt-test
         test.cpp
         text.hpp
-        doctest.h
-        ../include/ufmt/text.hpp
-        ../include/ufmt/print.hpp
-        ../include/ufmt/text_file.hpp
-        ../include/ufmt/buffered_file.hpp)
+        doctest.h)
 
-target_include_directories(ufmt-test PUBLIC ../include)
+target_link_libraries(ufmt-test PRIVATE ufmt)
 
-add_test(NAME test COMMAND ufmt-test)
-enable_testing()

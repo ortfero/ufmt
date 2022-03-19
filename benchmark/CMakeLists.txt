@@ -7,7 +7,7 @@ add_executable(ufmt-benchmark
         benchmark.cpp
         ../thirdparty/source/format.cc)
 
-target_include_directories(ufmt-benchmark PUBLIC
-        ../include
+target_link_libraries(ufmt-benchmark PRIVATE ufmt)
+target_include_directories(ufmt-benchmark PRIVATE
         ../thirdparty/include)
 
