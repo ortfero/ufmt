@@ -1,6 +1,6 @@
 # ufmt
 
-C++ library to format text
+C++17 header-only library to format text
 
 
 ## Usage
@@ -8,20 +8,15 @@ C++ library to format text
 Drop `include/ufmt` at your include path
 
 
-## Supported platforms and compilers
+## Tests and benchmark
 
-gcc 11, clang 14, msvc 19.24
-
-
-## Tests
-
-To build tests:
+To build tests and benchmark:
 
 ```shell
 cd ufmt
 mkdir build
 cd build
-meson ../test
+meson ..
 ninja
 ```
 
@@ -179,7 +174,7 @@ template<typename S> S& operator << (S& stream, point const& p) {
 | ```text.format(-127562);```                                  | 13.9      | x1    |
 | ```snprintf(charz, sizeof (charz), "%d", -127562);```        | 58.9      | x4.2  |
 | ```fmt::format_to(charz, "{}", -127562);```                  | 15.9      | x1.1  |
-| ```std::to_chars(charz, charz + sizeof charz, -127562);```   | 8.2       | x0.6  |
+| ```std::to_chars(charz, charz + sizeof charz, -127562);```   | l8.2       | x0.6  |
 | ```text.format(-127562.127562);```                           | 45.3      | x1    |
 | ```snprintf(charz, sizeof (charz), "%f", -127562.127562);``` | 237.0     | x5.2  |
 | ```fmt::format_to(charz, "{}", -127562.127562);```           | 88.5      | x1.9  |
