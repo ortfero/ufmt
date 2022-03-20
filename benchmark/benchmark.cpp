@@ -21,7 +21,7 @@ int main() {
 
   cout << "texter.print(char) - " << texter_char << '\n';
   cout << "snprintf(char)     - " << snprintf_char << '\n';
-  cout << "fmt::format(char)  - " << fmt_char << '\n';
+  cout << "fmt::format_to(char)  - " << fmt_char << '\n';
   cout << endl;
 
   auto const texter_literal = ubench::run([&]{ text.clear(); text.format("some literal"); });
@@ -30,7 +30,7 @@ int main() {
 
   cout << "texter.print(char[N]) - " << texter_literal << '\n';
   cout << "snprintf(char[N])     - " << snprintf_literal << '\n';
-  cout << "fmt::format(char[N])  - " << fmt_literal << '\n';
+  cout << "fmt::format_to(char[N])  - " << fmt_literal << '\n';
   cout << endl;
 
   auto const texter_int = ubench::run([&]{ text.clear(); text.format(-127562); });
@@ -40,7 +40,7 @@ int main() {
 
   cout << "texter.print(int)  - " << texter_int << '\n';
   cout << "snprintf(int)      - " << snprintf_int << '\n';
-  cout << "fmt::format(int)   - " << fmt_int << '\n';
+  cout << "fmt::format_to(int)   - " << fmt_int << '\n';
   cout << "std::to_chars(int) - " << tochars_int << '\n';
   cout << endl;
 
@@ -51,9 +51,17 @@ int main() {
 
   cout << "texter.print(double)  - " << texter_double << '\n';
   cout << "snprintf(double)      - " << snprintf_double << '\n';
-  cout << "fmt::format(double)   - " << fmt_double << '\n';
+  cout << "fmt::format_to(double)   - " << fmt_double << '\n';
   cout << endl;
 
+  auto const texter_format = ubench::run([&]{ text.clear(); text.format("nums: ", -1, ", ", -2, ", ", -3); });
+  auto const snprintf_format = ubench::run([&]{ snprintf(charz, sizeof(charz), "nums: %d, %d, %d", -1, -2, -3); });
+  auto const fmt_format = ubench::run([&]{ fmt::format_to(charz, "nums: {}, {}, {}", -1, -2, -3); });
+
+  cout << "texter.print(\"nums: \", -1, \", \", -2, \", \", -3)  - " << texter_format << '\n';
+  cout << "snprintf(\"nums: %d, %d, %d\", -1, -2, -3)      - " << snprintf_format << '\n';
+  cout << "fmt::format_to(\"nums: {}, {}, {}\", -1, -2, -3)   - " << fmt_format << '\n';
+  cout << endl;
 
   return 0;
 }
