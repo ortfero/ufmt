@@ -1,16 +1,15 @@
-project('ufmt-benchmark', 'cpp',
-  default_options: ['cpp_std=c++17'])
-
-incdirs = include_directories(
-    '../include',
-    '../thirdparty/include'
+fmtlib = declare_dependency(
+    version: '8.1.1',
+    include_directories: '../thirdparty/include',
+    sources: [
+        '../thirdparty/source/format.cc',
+        '../thirdparty/source/os.cc'
+    ]
 )
 
 sources = [
     'benchmark.cpp',
-    '../thirdparty/source/format.cc',
-    '../thirdparty/source/os.cc'
 ]
 
 executable('ufmt-benchmark',
-            sources, include_directories: incdirs)
+            sources, dependencies: [ufmt, fmtlib])

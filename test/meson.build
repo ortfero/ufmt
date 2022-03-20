@@ -1,6 +1,3 @@
-project('ufmt-test', 'cpp',
-  default_options: ['cpp_std=c++17'])
+ufmt_test = executable('ufmt-test', 'test.cpp', dependencies: ufmt)
+test('all', ufmt_test)
 
-incdirs = include_directories('../include')
-
-executable('ufmt-test', 'test.cpp', include_directories: incdirs)
