@@ -83,11 +83,9 @@ namespace ufmt {
         value_type* allocate(size_type n) {
             auto const original_size = string_.size();
             auto const next_size = original_size + n;
-            auto const original_capacity = string_.capacity();
             if(next_size > string_.capacity()) {
                 auto const reserve_size = nearest_power_of_2(next_size);
                 string_.reserve(reserve_size);
-                auto const next_capacity = string_.capacity();
                 if(string_.capacity() < reserve_size)
                     return nullptr;
             }
