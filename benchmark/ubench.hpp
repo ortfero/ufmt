@@ -68,7 +68,7 @@ namespace ubench {
             time[63] = '\0';
             os << time << " ns";
         }
-        
+
         if(r.code == result_code::ok)
             return os;
         os << " (probably " << describe(r.code) << ')';
@@ -81,21 +81,23 @@ namespace ubench {
 #    define UBENCH_NOINLINE __declspec(noinline)
 
 #    pragma optimize("", off)
-template<typename T> void dont_optimize(T&&) { }
+    template<typename T>
+    void dont_optimize(T&&) {}
 #    pragma optimize("", on)
 
 #else
 #    define UBENCH_NOINLINE __attribute__((noinline))
 
-    template<typename T> void dont_optimize(T&& val) {
-#if defined(__clang__)
+    template<typename T>
+    void dont_optimize(T&& val) {
+#    if defined(__clang__)
         asm volatile("" : "+r,m"(val) : : "memory");
-#else
+#    else
         asm volatile("" : "+m,r"(val) : : "memory");
-#endif
+#    endif
     }
 
-#endif // _MSC_VER
+#endif   // _MSC_VER
 
 
     template<std::size_t max_samples = 30, typename F>
@@ -178,7 +180,7 @@ template<typename T> void dont_optimize(T&&) { }
 #    else
         return {result_code::debug, rt};
 #    endif   // __OPTIMIZE__
-#endif   // _MSC_VER
+#endif       // _MSC_VER
     }
 
 

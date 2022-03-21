@@ -7,8 +7,6 @@
 
 
 TEST_SUITE("text") {
-
-
     TEST_CASE("constructor") {
         ufmt::text target;
         REQUIRE(target.size() == 0);
@@ -17,9 +15,7 @@ TEST_SUITE("text") {
     }
 
 
-    TEST_CASE("format(char)") {
-        REQUIRE_EQ(ufmt::text::of('a').string(), "a");
-    }
+    TEST_CASE("format(char)") { REQUIRE_EQ(ufmt::text::of('a').string(), "a"); }
 
 
     TEST_CASE("clear") {
@@ -53,8 +49,8 @@ TEST_SUITE("text") {
         REQUIRE_EQ(ufmt::text::of(1.0).string(), "1");
         REQUIRE_EQ(ufmt::text::of(0.009990).string(), "0.00999");
     }
-    
-    
+
+
     TEST_CASE("precised(double)") {
         using ufmt::precised;
         REQUIRE_EQ(ufmt::text::of(precised(1.0, 3)).string(), "1.000");
@@ -74,7 +70,7 @@ TEST_SUITE("text") {
 
 
     TEST_CASE("char_n") {
-        auto target = ufmt::text{};
+        auto target = ufmt::text {};
         target.char_n('*', 7);
         REQUIRE_EQ(target.string(), "*******");
     }

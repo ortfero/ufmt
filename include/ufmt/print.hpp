@@ -44,8 +44,8 @@
 #        endif
 #    endif
 
-#    include <fileapi.h>
 #    include <ProcessEnv.h>
+#    include <fileapi.h>
 
 #else
 
@@ -62,10 +62,9 @@ namespace ufmt {
 
         class alignas(64) spinlock {
         public:
-
             spinlock() noexcept = default;
             spinlock(spinlock const&) noexcept = delete;
-            spinlock& operator = (spinlock const&) noexcept = delete;
+            spinlock& operator=(spinlock const&) noexcept = delete;
 
             bool try_lock() noexcept {
                 if(flag_.load(std::memory_order_relaxed))
@@ -86,26 +85,19 @@ namespace ufmt {
             }
 
 
-            bool try_lock_shared() noexcept {
-                return try_lock();
-            }
+            bool try_lock_shared() noexcept { return try_lock(); }
 
 
-            void unlock_shared() noexcept {
-                unlock();
-            }
+            void unlock_shared() noexcept { unlock(); }
 
 
-            void lock_shared() noexcept {
-                lock();
-            }
+            void lock_shared() noexcept { lock(); }
 
 
         private:
+            std::atomic_bool flag_ {false};
 
-            std::atomic_bool flag_{false};
-
-        }; // spinlock
+        };   // spinlock
 
 
         inline spinlock sync;
@@ -121,15 +113,15 @@ namespace ufmt {
         detail::printer::buffer.format(std::forward<Args>(args)..., '\n');
 
 #if defined(_WIN32)
-        WriteFile(
-            GetStdHandle((DWORD)-11),
-            detail::printer::buffer.data(),
-            detail::printer::buffer.size(),
-            nullptr,
-            nullptr
-        );
+        WriteFile(GetStdHandle((DWORD)-11),
+                  detail::printer::buffer.data(),
+                  detail::printer::buffer.size(),
+                  nullptr,
+                  nullptr);
 #else
-        write(1, detail::printer::buffer.data(), detail::printer::buffer.size());
+        write(1,
+              detail::printer::buffer.data(),
+              detail::printer::buffer.size());
 #endif
     }
 
@@ -149,16 +141,16 @@ namespace ufmt {
 
 #if defined(_WIN32)
 
-        WriteFile(
-            GetStdHandle((DWORD)-12),
-            detail::printer::buffer.data(),
-            detail::printer::buffer.size(),
-            nullptr,
-            nullptr
-        );
+        WriteFile(GetStdHandle((DWORD)-12),
+                  detail::printer::buffer.data(),
+                  detail::printer::buffer.size(),
+                  nullptr,
+                  nullptr);
 
 #else
-        write(2, detail::printer::buffer.data(), detail::printer::buffer.size());
+        write(2,
+              detail::printer::buffer.data(),
+              detail::printer::buffer.size());
 #endif
     }
 
