@@ -1,24 +1,6 @@
-/* This file is part of ufmt library
- * Copyright 2020-2022 Andrei Ilin <ortfero@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+// This file is part of ufmt library
+// Copyright 2020-2022 Andrei Ilin <ortfero@gmail.com>
+// SPDX-License-Identifier: MIT
 
 #pragma once
 
@@ -44,8 +26,8 @@
 #        endif
 #    endif
 
-#    include <ProcessEnv.h>
 #    include <fileapi.h>
+#    include <ProcessEnv.h>
 
 #else
 
@@ -62,9 +44,10 @@ namespace ufmt {
 
         class alignas(64) spinlock {
         public:
+
             spinlock() noexcept = default;
             spinlock(spinlock const&) noexcept = delete;
-            spinlock& operator=(spinlock const&) noexcept = delete;
+            spinlock& operator = (spinlock const&) noexcept = delete;
 
             bool try_lock() noexcept {
                 if(flag_.load(std::memory_order_relaxed))
@@ -85,19 +68,26 @@ namespace ufmt {
             }
 
 
-            bool try_lock_shared() noexcept { return try_lock(); }
+            bool try_lock_shared() noexcept {
+                return try_lock();
+            }
 
 
-            void unlock_shared() noexcept { unlock(); }
+            void unlock_shared() noexcept {
+                unlock();
+            }
 
 
-            void lock_shared() noexcept { lock(); }
+            void lock_shared() noexcept {
+                lock();
+            }
 
 
         private:
-            std::atomic_bool flag_ {false};
 
-        };   // spinlock
+            std::atomic_bool flag_{false};
+
+        }; // spinlock
 
 
         inline spinlock sync;
@@ -113,15 +103,15 @@ namespace ufmt {
         detail::printer::buffer.format(std::forward<Args>(args)..., '\n');
 
 #if defined(_WIN32)
-        WriteFile(GetStdHandle((DWORD)-11),
-                  detail::printer::buffer.data(),
-                  detail::printer::buffer.size(),
-                  nullptr,
-                  nullptr);
+        WriteFile(
+            GetStdHandle((DWORD)-11),
+            detail::printer::buffer.data(),
+            detail::printer::buffer.size(),
+            nullptr,
+            nullptr
+        );
 #else
-        write(1,
-              detail::printer::buffer.data(),
-              detail::printer::buffer.size());
+        write(1, detail::printer::buffer.data(), detail::printer::buffer.size());
 #endif
     }
 
@@ -141,16 +131,16 @@ namespace ufmt {
 
 #if defined(_WIN32)
 
-        WriteFile(GetStdHandle((DWORD)-12),
-                  detail::printer::buffer.data(),
-                  detail::printer::buffer.size(),
-                  nullptr,
-                  nullptr);
+        WriteFile(
+            GetStdHandle((DWORD)-12),
+            detail::printer::buffer.data(),
+            detail::printer::buffer.size(),
+            nullptr,
+            nullptr
+        );
 
 #else
-        write(2,
-              detail::printer::buffer.data(),
-              detail::printer::buffer.size());
+        write(2, detail::printer::buffer.data(), detail::printer::buffer.size());
 #endif
     }
 
