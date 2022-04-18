@@ -42,7 +42,7 @@ namespace ufmt {
 
     namespace detail::printer {
 
-        class alignas(64) spinlock {
+        class spinlock {
         public:
 
             spinlock() noexcept = default;
