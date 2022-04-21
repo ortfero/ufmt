@@ -103,10 +103,9 @@ namespace ufmt {
         detail::printer::buffer.format(std::forward<Args>(args)..., '\n');
 
 #if defined(_WIN32)
-        WriteFile(
-            GetStdHandle((DWORD)-11),
+        WriteFile(GetStdHandle(DWORD(-11)),
             detail::printer::buffer.data(),
-            detail::printer::buffer.size(),
+            DWORD(detail::printer::buffer.size()),
             nullptr,
             nullptr
         );
@@ -131,10 +130,9 @@ namespace ufmt {
 
 #if defined(_WIN32)
 
-        WriteFile(
-            GetStdHandle((DWORD)-12),
+        WriteFile(GetStdHandle(DWORD(-12)),
             detail::printer::buffer.data(),
-            detail::printer::buffer.size(),
+            DWORD(detail::printer::buffer.size()),
             nullptr,
             nullptr
         );
