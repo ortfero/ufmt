@@ -115,14 +115,6 @@ namespace ufmt {
             format(std::forward<Args>(args)...);
         }
 
-
-        /*template<std::size_t N> friend
-        basic_text& operator << (basic_text& self,
-                                 value_type const (&literal)[N]) {
-            return self.append(literal, N - 1);
-        }*/
-
-
     private:
 
         static uint64_t nearest_power_of_2(uint64_t n) {
@@ -178,12 +170,6 @@ namespace ufmt {
     template<class S, std::size_t N>
     basic_text<S>& operator << (basic_text<S>& self, char const (&cc)[N]) {
         return self.append(cc, N - 1);
-    }
-
-
-    template<class S>
-    basic_text<S>& operator << (basic_text<S>& self, bool value) {
-        return value ? self.append("true", 4) : self.append("false", 5);
     }
 
 
