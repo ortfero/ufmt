@@ -88,4 +88,11 @@ TEST_SUITE("text") {
         REQUIRE_EQ(ufmt::text::of(right(-1, 4)).string(), "  -1");
         REQUIRE_EQ(ufmt::text::of(right(-10, 2)).string(), "-10");
     }
+
+
+    TEST_CASE("uint64_t") {
+        auto target = ufmt::text{};
+        target << std::uint64_t(0xFFFFFFFFFFFFFFFFull);
+        REQUIRE_EQ(target.string(), "18446744073709551615");
+    }
 }
