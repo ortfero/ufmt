@@ -2,4 +2,5 @@
 #include "doctest.h"
 
 
+#include "fixed_string.hpp"
 #include "text.hpp"
