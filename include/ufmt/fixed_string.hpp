@@ -316,6 +316,10 @@ namespace ufmt {
         std::string_view substr(size_type pos, size_type n) const noexcept {
             return std::string_view {p_ + pos, p_ + pos + n};
         }
+        
+        int compare(fixed_string const& rhs) const noexcept {
+            return compare(rhs.begin(), rhs.end());
+        }
 
         template<int M>
         int compare(fixed_string<M> const& rhs) const noexcept {
