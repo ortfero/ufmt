@@ -95,4 +95,20 @@ TEST_SUITE("text") {
         target << std::uint64_t(0xFFFFFFFFFFFFFFFFull);
         REQUIRE_EQ(target.string(), "18446744073709551615");
     }
+    
+    
+    TEST_CASE("copy internal buffer") {
+        auto target = ufmt::text::of(-1);
+        auto const s1 = target.string();
+        auto const s2 = target.string();
+        REQUIRE_EQ(s1, s2);
+    }
+    
+    
+    TEST_CASE("move internal buffer") {
+        auto target = ufmt::text::of(-1);
+        auto const s1 = std::move(target).string();
+        REQUIRE(target.string().empty());
+        REQUIRE_EQ(s1, "-1");
+    }
 }
