@@ -46,7 +46,8 @@ namespace ufmt {
         basic_text(basic_text&&) noexcept = default;
         basic_text& operator=(basic_text&&) noexcept = default;
 
-        S const& string() const noexcept { return string_; }
+        S&& string() && noexcept { return std::move(string_); }
+        S const& string() const& noexcept { return string_; }
         value_type const* data() const noexcept { return string_.data(); }
         size_type size() const noexcept { return string_.size(); }
         bool empty() const noexcept { return string_.empty(); }
