@@ -40,7 +40,7 @@ namespace ufmt {
         }
 
         template<std::size_t M>
-        explicit fixed_string(char const (&data)[M]) noexcept {
+        fixed_string(char const (&data)[M]) noexcept {
             assign(data, data + M);
         }
 
