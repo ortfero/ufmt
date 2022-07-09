@@ -28,7 +28,7 @@ namespace ufmt {
 
         static constexpr size_type npos = size_type(-1);
 
-        fixed_string() noexcept: n_(0) { p_[0] = '\0'; }
+        constexpr fixed_string() noexcept: n_(0) { p_[0] = '\0'; }
 
         fixed_string(fixed_string const& rhs) noexcept {
             assign(rhs.begin(), rhs.end());
@@ -41,12 +41,12 @@ namespace ufmt {
 
         template<std::size_t M>
         fixed_string(char const (&data)[M]) noexcept {
-            assign(data, data + M);
+            assign(data, data + M - 1);
         }
 
         template<std::size_t M>
         explicit fixed_string(wchar_t const (&data)[M]) noexcept {
-            assign(data, data + M);
+            assign(data, data + M - 1);
         }
 
         explicit fixed_string(char const* data) noexcept { assign(data); }
@@ -119,13 +119,13 @@ namespace ufmt {
 
         char& at(size_type i) {
             if(i >= n_)
-                throw std::out_of_range("invalid string index");
+                throw std::out_of_range("invalid fixed_string index");
             return p_[i];
         }
 
         char const& at(size_type i) const {
             if(i >= n_)
-                throw std::out_of_range("invalid string index");
+                throw std::out_of_range("invalid fixed_string index");
             return p_[i];
         }
 
