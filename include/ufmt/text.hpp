@@ -46,8 +46,7 @@ namespace ufmt {
         basic_text(basic_text&&) noexcept = default;
         basic_text& operator=(basic_text&&) noexcept = default;
 
-        S&& string() && noexcept { return std::move(string_); }
-        S const& string() const& noexcept { return string_; }
+        S const& string() const noexcept { return string_; }
         value_type const* data() const noexcept { return string_.data(); }
         size_type size() const noexcept { return string_.size(); }
         bool empty() const noexcept { return string_.empty(); }
@@ -414,6 +413,21 @@ namespace ufmt {
         basic_text<S>& operator << (basic_text<S>& self, textize<T> arg) {
             return self << arg.value;
         }
+        
+        
+        struct boolean {
+            bool value;
+        };
+        
+        
+        template<class S>
+        basic_text<S>& operator << (basic_text<S>& self, boolean arg) {
+            if(arg.value)
+                return self << "true";
+            else
+                return self << "false";
+        }
+        
     } // formatters
 
 
@@ -461,9 +475,15 @@ namespace ufmt {
         return formatters::dquoted<T>{value};
     }
 
+
     template<typename T>
     formatters::textize<T> textize(T const& value) {
         return formatters::textize<T>{value};
+    }
+    
+    
+    inline formatters::boolean boolean(bool value) {
+        return formatters::boolean{value};
     }
 
 } // ufmt
