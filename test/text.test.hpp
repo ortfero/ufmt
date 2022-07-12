@@ -7,7 +7,9 @@
 
 
 TEST_SUITE("text") {
-    TEST_CASE("constructor") {
+    
+    
+    SCENARIO("Construct") {
         ufmt::text target;
         REQUIRE(target.size() == 0);
         REQUIRE(target.empty());
@@ -15,10 +17,12 @@ TEST_SUITE("text") {
     }
 
 
-    TEST_CASE("format(char)") { REQUIRE_EQ(ufmt::text::of('a').string(), "a"); }
+    SCENARIO("Format character") {
+        REQUIRE_EQ(ufmt::text::of('a').string(), "a");
+    }
 
 
-    TEST_CASE("clear") {
+    SCENARIO("Clear formatter") {
         ufmt::text target;
         target << "qwerty";
         target.clear();
@@ -28,76 +32,76 @@ TEST_SUITE("text") {
     }
 
 
-    TEST_CASE("format(char[])") {
+    SCENARIO("Format string literal") {
         REQUIRE_EQ(ufmt::text::of("qwerty").string(), "qwerty");
     }
 
 
-    TEST_CASE("format(int)") {
+    SCENARIO("Format integer") {
         REQUIRE_EQ(ufmt::text::of(127562).string(), "127562");
     }
 
 
-    TEST_CASE("fixed(unsigned)") {
+    SCENARIO("Format fixed integer") {
         using ufmt::fixed;
         REQUIRE_EQ(ufmt::text::of(fixed(127, 2)).string(), "127");
         REQUIRE_EQ(ufmt::text::of(fixed(12, 4)).string(), "0012");
     }
 
 
-    TEST_CASE("format(double)") {
+    SCENARIO("Format double") {
         REQUIRE_EQ(ufmt::text::of(1.0).string(), "1");
         REQUIRE_EQ(ufmt::text::of(0.009990).string(), "0.00999");
     }
 
 
-    TEST_CASE("precised(double)") {
+    SCENARIO("Format double with fixed precision") {
         using ufmt::precised;
         REQUIRE_EQ(ufmt::text::of(precised(1.0, 3)).string(), "1.000");
     }
 
 
-    TEST_CASE("quoted") {
+    SCENARIO("Format quoted") {
         using ufmt::quoted;
         REQUIRE_EQ(ufmt::text::of(quoted(127562)).string(), "'127562'");
     }
 
 
-    TEST_CASE("dquoted") {
+    SCENARIO("Format double quoted") {
         using ufmt::dquoted;
         REQUIRE_EQ(ufmt::text::of(dquoted(127562)).string(), "\"127562\"");
     }
 
 
-    TEST_CASE("char_n") {
+    SCENARIO("Format char_n") {
         auto target = ufmt::text {};
-        target.char_n('*', 7);
+        target << ufmt::char_n('*', 7);
         REQUIRE_EQ(target.string(), "*******");
     }
 
 
-    TEST_CASE("left") {
+    SCENARIO("Align left") {
         using ufmt::left;
         REQUIRE_EQ(ufmt::text::of(left(-1, 4)).string(), "-1  ");
         REQUIRE_EQ(ufmt::text::of(left(-10, 2)).string(), "-10");
     }
 
 
-    TEST_CASE("right") {
+    SCENARIO("Align right") {
         using ufmt::right;
         REQUIRE_EQ(ufmt::text::of(right(-1, 4)).string(), "  -1");
         REQUIRE_EQ(ufmt::text::of(right(-10, 2)).string(), "-10");
     }
 
 
-    TEST_CASE("uint64_t") {
+    SCENARIO("Format uint64_t") {
         auto target = ufmt::text{};
         target << std::uint64_t(0xFFFFFFFFFFFFFFFFull);
         REQUIRE_EQ(target.string(), "18446744073709551615");
     }
     
     
-    TEST_CASE("copy internal buffer") {
+    SCENARIO("Copy internal buffer") {
         auto target = ufmt::text::of(-1);
         auto const s1 = target.string();
         auto const s2 = target.string();
@@ -105,9 +109,10 @@ TEST_SUITE("text") {
     }
     
     
-    TEST_CASE("move internal buffer") {
+    SCENARIO("Move internal buffer") {
         auto target = ufmt::text::of(-1);
         auto const s1 = std::move(target).string();
+        std::cout << target.string().size() << std::endl;
         REQUIRE(target.string().empty());
         REQUIRE_EQ(s1, "-1");
     }
