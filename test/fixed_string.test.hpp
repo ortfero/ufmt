@@ -9,7 +9,7 @@
 TEST_SUITE("fixed_string") {
 
 
-    TEST_CASE("fixed_string::fixed_string") {
+    SCENARIO("Default construction") {
         ufmt::string target;
         REQUIRE(target.empty());
         REQUIRE(target.size() == 0);
@@ -17,7 +17,7 @@ TEST_SUITE("fixed_string") {
     }
 
 
-    TEST_CASE("fixed_string(\"test\")") {
+    SCENARIO("Construction from string literal") {
         ufmt::string target("test");
         REQUIRE(!target.empty());
         REQUIRE(target.size() == sizeof("test") - 1);
@@ -25,7 +25,7 @@ TEST_SUITE("fixed_string") {
     }
 
 
-    TEST_CASE("operator << (ostream, fixed_string)") {
+    SCENARIO("Output to ostream") {
         std::stringstream ss;
         ufmt::string target("test");
         ss << target;
@@ -33,12 +33,23 @@ TEST_SUITE("fixed_string") {
     }
     
     
-    TEST_CASE("conversion from wchar_t*") {
+    SCENARIO("Conversion from wchar_t*") {
         static wchar_t const* data = L"1234";
         auto const target = ufmt::string{ data };
         REQUIRE_EQ(target.size(), 4);
         auto const equals = strcmp(target.data(), "1234") == 0;
         REQUIRE(equals);
+    }
+
+
+    SCENARIO("Copy to wchar_t array") {
+        auto const text = ufmt::short_string{"text"};
+        auto target = std::array<wchar_t, 4>{};
+        text.copy_to(target);
+        REQUIRE_EQ(target[0], L't');
+        REQUIRE_EQ(target[1], L'e');
+        REQUIRE_EQ(target[2], L'x');
+        REQUIRE_EQ(target[3], L'\0');
     }
 
 }
