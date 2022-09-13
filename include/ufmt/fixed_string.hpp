@@ -81,6 +81,12 @@ namespace ufmt {
             return assign(data);
         }
 
+
+        constexpr fixed_string& operator=(wchar_t const* data) noexcept {
+            return assign(data);
+        }
+
+
         constexpr fixed_string& operator=(std::string const& rhs) noexcept {
             return assign(rhs.data(), rhs.data() + rhs.size());
         }
