@@ -33,10 +33,10 @@ namespace ufmt {
 
 
         template<typename... Args>
-        static basic_text of(Args&&... args) {
+        static S of(Args&&... args) {
             basic_text t;
             t.format(std::forward<Args>(args)...);
-            return t;
+            return t.string_;
         }
 
 
