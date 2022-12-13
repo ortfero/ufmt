@@ -420,6 +420,11 @@ namespace ufmt {
         constexpr void copy_to(std::array<wchar_t, M>& data) const noexcept {
             copy_to(data.data(), M);
         }
+
+
+        constexpr std::string_view view() const noexcept {
+            return std::string_view{p_, n_};
+        }
         
 
     private:
