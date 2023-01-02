@@ -52,9 +52,14 @@ namespace ufmt {
         size_type size() const noexcept { return string_.size(); }
         bool empty() const noexcept { return string_.empty(); }
         void clear() noexcept { string_.clear(); }
-        size_type capacity() const noexcept { return string_.capacity(); }
+        size_type capacity() const noexcept { return string_.capacity(); }        
         value_type operator[](size_type i) const noexcept { return string_[i]; }
         value_type& operator[](size_type i) noexcept { return string_[i]; }
+        
+        
+        std::string_view view() const noexcept {
+            return std::string_view{string_.data(), string_.size()};
+        }
 
 
         void reserve(size_type n) {

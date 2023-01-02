@@ -128,6 +128,7 @@ auto r = ufmt::text::of(right(1, 4));
 // "   1"
 ```
 
+
 ### Quoted string
 
 ```cpp
@@ -136,6 +137,7 @@ auto r = ufmt::text::of(quoted("qwerty"));
 // "'qwerty'"
 ```
 
+
 ### Double quoted string
 
 ```cpp
@@ -143,7 +145,6 @@ using ufmt::dquoted;
 auto r = ufmt::text::of(dquoted("qwerty"));
 // ""qwerty""
 ```
-
 
 
 ### Custom type
@@ -156,6 +157,58 @@ template<typename S> S& operator << (S& stream, point const& p) {
     return stream << "{ x: " << p.x << "; y: " << p.y << " }";
 }
 
+```
+
+
+## JSON formatting
+
+### Format object
+
+```cpp
+#include <ufmt/json.hpp>
+
+...
+
+std::string const& text = ufmt::json::of("x", -1, "y", 3.14, "z", "ok");
+// text == R"({"x":-1,"y":3.14,"z":"ok"})"
+```
+
+
+### Format custom type
+
+```cpp
+#include <ufmt/json.hpp>
+
+struct point {
+    int x, y;
+};
+
+template<class S> ufmt::basic_json<S>& operator << (ufmt::basic_json<S>& json, point const& p) {
+    return json << ufmt::object("x", p.x, "y", p.y);
+}
+
+...
+
+std::string const& text = ufmt::json::of("point", point{-1, -1});
+// text == R"({"point":{"x":-1,"y":-1}})"
+```
+
+### Format array
+
+```cpp
+auto const& text = ufmt::json::of("x", std::vector{1, 2, 3}); // std::array should be ok too
+// text == R"({"x":[1,2,3]})";
+
+```
+
+### Format to fixed buffer
+
+```cpp
+auto const& text = ufmt::long_string_json::of("x", -1);
+// long_string_json - around 1024 bytes
+// page_string_json - around 4096 bytes 
+// double_page_string_json - around 8192 bytes
+// large_string_json - around 65536 bytes
 ```
 
 

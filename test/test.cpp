@@ -2,5 +2,6 @@
 #include "doctest.h"
 
 
-#include "fixed_string.hpp"
-#include "text.hpp"
+#include "fixed_string.test.hpp"
+#include "json.test.hpp"
+#include "text.test.hpp"
