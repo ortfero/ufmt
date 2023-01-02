@@ -212,6 +212,15 @@ auto const& text = ufmt::long_string_json::of("x", -1);
 ```
 
 
+### Format to dynamic reserved buffer
+
+```cpp
+auto json = ufmt::json{};
+json.reserve(65536);
+json << ufmt::object("x", -1, "y", 3.14, "z", "ok");
+auto const& text = json.string();
+```
+
 ## Benchmarks
 
 ### Formatting
