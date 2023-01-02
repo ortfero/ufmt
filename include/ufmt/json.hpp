@@ -65,6 +65,7 @@ namespace ufmt {
         void clear() noexcept { text_.clear(); }
         size_type capacity() const noexcept { return text_.capacity(); }
         std::string_view view() const noexcept { return text_.view(); }
+        void reserve(size_type n) { text_.reserve(n); }
                 
         basic_json& operator << (std::int32_t arg) {
             text_ << arg;
