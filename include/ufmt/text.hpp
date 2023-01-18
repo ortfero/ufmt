@@ -430,8 +430,7 @@ namespace ufmt {
         };
         
         
-        template<class S>
-        basic_text<S>& operator << (basic_text<S>& self, boolean arg) {
+        template<class S> S& operator << (S& self, boolean arg) {
             if(arg.value)
                 return self << "true";
             else
