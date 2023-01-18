@@ -145,6 +145,8 @@ namespace ufmt {
 
 
     using text = basic_text<std::string>;
+    using short_text = basic_text<short_string>;
+    using fixed_text = basic_text<string>;
 
 
     template<class String, class Stream>

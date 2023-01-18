@@ -212,7 +212,7 @@ auto const& text = ufmt::long_string_json::of("x", -1);
 ```
 
 
-### Format to dynamic reserved buffer
+### Format to reserved buffer
 
 ```cpp
 auto json = ufmt::json{};
@@ -220,6 +220,7 @@ json.reserve(65536);
 json << ufmt::object("x", -1, "y", 3.14, "z", "ok");
 auto const& text = json.string();
 ```
+
 
 ## Benchmarks
 
@@ -236,7 +237,7 @@ auto const& text = json.string();
 | ```text.format(-127562);```                                  | 13.9      | x1    |
 | ```snprintf(charz, sizeof (charz), "%d", -127562);```        | 58.9      | x4.2  |
 | ```fmt::format_to(charz, "{}", -127562);```                  | 15.9      | x1.1  |
-| ```std::to_chars(charz, charz + sizeof charz, -127562);```   | l8.2       | x0.6  |
+| ```std::to_chars(charz, charz + sizeof charz, -127562);```   | l8.2      | x0.6  |
 | ```text.format(-127562.127562);```                           | 45.3      | x1    |
 | ```snprintf(charz, sizeof (charz), "%f", -127562.127562);``` | 237.0     | x5.2  |
 | ```fmt::format_to(charz, "{}", -127562.127562);```           | 88.5      | x1.9  |
