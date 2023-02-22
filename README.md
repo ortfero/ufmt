@@ -193,6 +193,29 @@ std::string const& text = ufmt::json::of("point", point{-1, -1});
 // text == R"({"point":{"x":-1,"y":-1}})"
 ```
 
+### Format optional fields
+
+```cpp
+#include <optional>
+#include <ufmt/json.hpp>
+
+struct point {
+    int x, y;
+    std::optional<int> z;
+};
+
+template<class S> ufmt::basic_json<S>& operator << (ufmt::basic_json<S>& json, point const& p) {
+    return json << ufmt::object("x", p.x, "y", p.y, "z", p.z);
+}
+
+...
+
+std::string const& text1 = ufmt::json::of("point", point{-1, -1, -1});
+// text1 == R"({"point":{"x":-1,"y":-1,"z":-1}})"
+std::string const& text2 = ufmt::json::of("point", point{-1, -1, std::nullopt});
+// text1 == R"({"point":{"x":-1,"y":-1}})"
+```
+
 ### Format array
 
 ```cpp
