@@ -1,13 +1,14 @@
 #pragma once
 
 
+#include <optional> 
+
 #include "doctest.h"
 
 #include <ufmt/json.hpp>
 
 
 TEST_SUITE("json") {
-    
     
     SCENARIO("Format i32") {
         REQUIRE_EQ(ufmt::json::of("x", -1), R"({"x":-1})");
@@ -40,7 +41,21 @@ TEST_SUITE("json") {
     }
     
     SCENARIO("Format custom type") {
-        REQUIRE_EQ(ufmt::json::of("point", point{-1, -1}), R"({"point":{"x":-1,"y":-1}})");
+        REQUIRE_EQ(ufmt::json::of(point{-1, -2}), R"({"x":-1,"y":-2})");
+    }
+    
+    struct point3d {
+        int x, y;
+        std::optional<int> z;
+    };
+    
+    template<class S> ufmt::basic_json<S>& operator << (ufmt::basic_json<S>& json, point3d const& p) {
+        return json << ufmt::object("x", p.x, "y", p.y, "z", p.z);
+    }
+    
+    SCENARIO("Format with optional fields") {
+        REQUIRE_EQ(ufmt::json::of(point3d{-1, -2, -3}), R"({"x":-1,"y":-2,"z":-3})");
+        REQUIRE_EQ(ufmt::json::of(point3d{-1, -2, std::nullopt}), R"({"x":-1,"y":-2})");
     }
     
 }
