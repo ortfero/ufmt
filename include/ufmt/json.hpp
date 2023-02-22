@@ -224,13 +224,6 @@ namespace ufmt {
             format_object(std::apply([](auto&&, auto&&... args) { return std::tie(args...); }, arg));
         }
         
-        template<typename Arg> struct field_formatter<std::optional<Arg> const&> {
-            static void format(basic_json& json, field<std::optional<Arg> const&> const& f) {
-                if(!f.value.has_value())
-                    return;
-                json.text_ << ',' << '\"' << f.name << '\"' << ':';
-            }
-        };
 
         template<typename Arg>
         void format_field(field<Arg> f) {

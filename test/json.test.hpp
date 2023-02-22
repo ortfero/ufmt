@@ -25,7 +25,8 @@ TEST_SUITE("json") {
     }
     
     SCENARIO("Format array") {
-        REQUIRE_EQ(ufmt::json::of("x", std::vector{1, 2, 3}), R"({"x":[1,2,3]})");
+        REQUIRE_EQ(ufmt::json::of(std::vector<int>{}), R"([])");
+        REQUIRE_EQ(ufmt::json::of(std::vector{1, 2, 3}), R"([1,2,3])");
     }
     
     SCENARIO("Format object") {
