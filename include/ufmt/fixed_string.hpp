@@ -185,6 +185,8 @@ namespace ufmt {
         }
 
         constexpr fixed_string& append(char const* cc) noexcept {
+            if(!cc)
+                return *this;
             size_type n = n_;
             if(n == N || !cc)
                 return *this;
@@ -199,6 +201,8 @@ namespace ufmt {
         }
 
         constexpr fixed_string& append(wchar_t const* cc) noexcept {
+            if(!cc)
+                return *this;
             size_type n = n_;
             if(n == N || !cc)
                 return *this;
