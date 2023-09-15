@@ -37,7 +37,8 @@ namespace ufmt {
     
     template<std::size_t N, typename Arg, typename... Args> auto constexpr
     object(char const (&name)[N], Arg&& arg, Args&&... args) noexcept {
-        return tuple_cat(std::tuple<field<Arg>>{field<Arg>{name, std::forward<Arg>(arg)}}, object(std::forward<Args>(args)...));
+        return tuple_cat(std::tuple<field<Arg>>{field<Arg>{name, std::forward<Arg>(arg)}},
+                         object(std::forward<Args>(args)...));
     }
      
     
@@ -106,6 +107,12 @@ namespace ufmt {
 
         
         basic_json& operator << (double arg) {
+            text_ << arg;
+            return *this;
+        }
+
+
+        basic_json& operator << (formatters::precised<double> arg) {
             text_ << arg;
             return *this;
         }
