@@ -171,6 +171,11 @@ namespace ufmt {
         template<typename T> basic_json& operator << (std::vector<T> const& arg) {
             return format_array(arg);
         }
+
+
+        template<typename T> basic_json& operator << (std::span<T> const& arg) {
+            return format_array(arg);
+        }
         
         
         template<typename... Args> basic_json& operator << (std::tuple<> const& ) {

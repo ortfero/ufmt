@@ -6,6 +6,7 @@
 
 
 #include <charconv>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -258,6 +259,22 @@ namespace ufmt {
     template<class S, typename T>
     basic_text<S>& operator << (basic_text<S>& self,
                                 std::vector<T> const& value) {
+        self << '[';
+        if(!value.empty()) {
+            auto it = value.begin();
+            self << ' ' << *it;
+            ++it;
+            for(; it != value.end(); ++it)
+                self << ',' << ' ' << *it;
+        }
+        self << ' ' << ']';
+        return self;
+    }
+
+
+    template<class S, typename T>
+    basic_text<S>& operator << (basic_text<S>& self,
+                                std::span<T> const& value) {
         self << '[';
         if(!value.empty()) {
             auto it = value.begin();
