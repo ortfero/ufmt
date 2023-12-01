@@ -481,23 +481,23 @@ namespace ufmt {
     }
 
 
-    formatters::precised<double> precised(double value, int precision) noexcept {
+    inline formatters::precised<double> precised(double value, int precision) noexcept {
         return formatters::precised<double>{value, precision};
     }
 
-    formatters::fixed<std::int32_t> fixed(std::int32_t value, int width) noexcept {
+    inline formatters::fixed<std::int32_t> fixed(std::int32_t value, int width) noexcept {
         return formatters::fixed<std::int32_t>{value, std::size_t(width)};
     }
 
-    formatters::fixed<std::uint32_t> fixed(std::uint32_t value, int width) noexcept {
+    inline formatters::fixed<std::uint32_t> fixed(std::uint32_t value, int width) noexcept {
         return formatters::fixed<std::uint32_t>{value, std::size_t(width)};
     }
 
-    formatters::fixed<std::int64_t> fixed(std::int64_t value, int width) noexcept {
+    inline formatters::fixed<std::int64_t> fixed(std::int64_t value, int width) noexcept {
         return formatters::fixed<std::int64_t>{value, std::size_t(width)};
     }
 
-    formatters::fixed<std::uint64_t> fixed(std::uint64_t value, int width) noexcept {
+    inline formatters::fixed<std::uint64_t> fixed(std::uint64_t value, int width) noexcept {
         return formatters::fixed<std::uint64_t>{value, std::size_t(width)};
     }
 
