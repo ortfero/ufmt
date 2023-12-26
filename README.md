@@ -14,10 +14,8 @@ To build tests and benchmark:
 
 ```shell
 cd ufmt
-mkdir build
-cd build
-meson ..
-ninja
+ninja test
+ninja benchmark
 ```
 
 ## Interface
