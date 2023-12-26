@@ -30,7 +30,10 @@
 *.exe
 *.out
 *.app
-
+OB
 build/
 cmake-build-debug/
 cmake-build-release/
+.DS_Store
+.ninja_deps
+.ninja_log
