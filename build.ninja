@@ -9,16 +9,16 @@ dflags = -std=c++20
 
 inc_dirs = -I./include
 
-rule rcxx
+rule release_cxx
   command = c++ $rflags $inc_dirs $in -o $out
 
-build $release_test_file: rcxx ./test/test.cpp
+build $release_test_file: release_cxx ./test/test.cpp
 build release: phony $release_test_file
 
-rule dcxx
+rule debug_cxx
   command = c++ $dflags $inc_dirs $in -o $out
 
-build $debug_test_file: dcxx ./test/test.cpp
+build $debug_test_file: debug_cxx ./test/test.cpp
 build debug: phony $debug_test_file
 
 default release
@@ -26,8 +26,8 @@ default release
 rule run_debug_test
   command = $debug_test_file
 
-build run_debug_test: run_debug_test
-build test: phony $debug_test_file run_debug_test
+build run_debug_test: run_debug_test || $debug_test_file
+build test: phony run_debug_test
 
 benchmark_inc_dirs = $inc_dirs -I./thirdparty/include
 
@@ -42,5 +42,6 @@ build $release_benchmark_file: benchmark_cxx $
   thirdparty/source/os.cc
 rule run_release_benchmark
   command = $release_benchmark_file
-build run_release_benchmark: run_release_benchmark
-build benchmark: phony $release_benchmark_file run_release_benchmark
+
+build run_release_benchmark: run_release_benchmark || $release_benchmark_file
+build benchmark: phony run_release_benchmark
