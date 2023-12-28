@@ -448,7 +448,7 @@ namespace ufmt {
     using long_string = fixed_string<1024 - sizeof(std::size_t) - 1>;
     static_assert(sizeof(long_string) == 1024);
     
-    using page_string = fixed_string<4092 - sizeof(std::size_t) - 1>;
+    using page_string = fixed_string<4096 - sizeof(std::size_t) - 1>;
     static_assert(sizeof(page_string) == 4096);
     
     using double_page_string = fixed_string<8192 - sizeof(std::size_t) - 1>;
