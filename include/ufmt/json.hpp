@@ -250,7 +250,14 @@ namespace ufmt {
             text_ << ',' << '\"' << f.name << '\"' << ':';
             (*this) << *f.value;
         }
-        
+
+        template<typename Arg>
+        void format_field(field<std::optional<Arg>&> f) {
+            if(!f.value.has_value())
+                return;
+            text_ << ',' << '\"' << f.name << '\"' << ':';
+            (*this) << *f.value;
+        }        
     }; // basic_json
     
     
