@@ -60,7 +60,6 @@ TEST_SUITE("text") {
         REQUIRE_EQ(ufmt::text::of(precised(1.0, 3)), "1.000");
     }
 
-
     SCENARIO("Format quoted") {
         using ufmt::quoted;
         REQUIRE_EQ(ufmt::text::of(quoted(127562)), "'127562'");
@@ -105,8 +104,8 @@ TEST_SUITE("text") {
         auto target = ufmt::text{};
         target << -1;
         auto const s1 = std::move(target).string();
-        std::cout << target.string().size() << std::endl;
         REQUIRE(target.string().empty());
         REQUIRE_EQ(s1, "-1");
     }
+
 }
