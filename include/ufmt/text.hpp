@@ -6,6 +6,7 @@
 
 
 #include <charconv>
+#include <cstdint>
 #include <span>
 #include <string>
 #include <string_view>
@@ -206,14 +207,8 @@ namespace ufmt {
             typename S::value_type* p = self.allocate(N);
             if(!p)
                 return self;
-#if defined(_MSC_VER)
             auto const r = std::to_chars(p, p + N, value);
             self.free(r.ptr);
-#else
-            auto const n = std::snprintf(p, N, "%g", value);
-            if(n < 0) self.free(p); else self.free(p + n);
-#endif
-
             return self;
         }
 
