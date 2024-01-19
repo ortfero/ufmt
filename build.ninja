@@ -33,7 +33,7 @@ benchmark_inc_dirs = $inc_dirs -I./thirdparty/include
 
 rule benchmark_cxx
   command = c++ $rflags $benchmark_inc_dirs $in -o $out
-  
+
 release_benchmark_file = $release_build_dir/${project}-benchmark
 
 build $release_benchmark_file: benchmark_cxx $
