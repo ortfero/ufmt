@@ -12,22 +12,15 @@
 
 #if defined(_WIN32)
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 
-#    if !defined(_X86_) && !defined(_AMD64_) && !defined(_ARM_) \
-        && !defined(_ARM64_)
-#        if defined(_M_IX86)
-#            define _X86_
-#        elif defined(_M_AMD64)
-#            define _AMD64_
-#        elif defined(_M_ARM)
-#            define _ARM_
-#        elif defined(_M_ARM64)
-#            define _ARM64_
-#        endif
-#    endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 
-#    include <fileapi.h>
-#    include <ProcessEnv.h>
+#include <windows.h>
 
 #else
 
