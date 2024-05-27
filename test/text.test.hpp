@@ -107,5 +107,12 @@ TEST_SUITE("text") {
         REQUIRE(target.string().empty());
         REQUIRE_EQ(s1, "-1");
     }
+	
+	SCENARIO("Format double as decimal") {
+		using ufmt::decimal;
+		REQUIRE_EQ(ufmt::text::of(decimal(1e100, 18, 8)), "");
+		REQUIRE_EQ(ufmt::text::of(decimal(9999999999.73580305, 18, 8)), "9999999999.73580305");
+		REQUIRE_EQ(ufmt::text::of(decimal(9999999999.735803055, 18, 8)), "9999999999.73580306");
+	}
 
 }
