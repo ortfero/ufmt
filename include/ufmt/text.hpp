@@ -475,46 +475,7 @@ namespace ufmt {
             self.char_n(arg.c, arg.n);
             return self;
         }
-		
-		
-		template<typename T> struct decimal {
-			T value;
-			int max_width;
-			int max_precision;
-		}; // decimal
-		
-		
-		template<class S, typename T>
-        basic_text<S>& operator << (basic_text<S>& self, decimal<T> arg) {
-			using namespace std;
-			auto precision = arg.max_precision;
-			auto integral_part = T{};
-			modf(arg.value, &integral_part);
-			if(integral_part < 0.0)
-				integral_part = -integral_part
-			auto const integral_decimal_places = int(floor(log10(integral_part)) + 1);
-			if(integral_decimal_places > arg.max_width)
-				return self;
-			auto precision = arg.max_width - integral_decimal_places
-			if(precision > arg.max_precision)
-				precision = arg.max_precision;
-            typename S::value_type* p = self.allocate(arg.max_width + 1);
-            if(!p)
-                return self;
-		#if defined(_MSC_VER)
-			auto const r = std::to_chars(p, p + arg.max_width + 1, arg.value,
-										 std::chars_format::fixed, precision);
-			if(r.ec == std::errc{}) {
-				self.free(r.ptr);
-			} else {
-				self.free(p);
-			}
-        #else
-            auto const n = std::snprintf(p, float_digits, "%.*f", precision, arg.value);
-            if(n <= 0) self.free(p); else self.free(p + n);
-        #endif
-            return self;
-        }
+			
     } // formatters
 
 
@@ -535,19 +496,19 @@ namespace ufmt {
     }
 
     inline formatters::fixed<std::int32_t> fixed(std::int32_t value, unsigned width) noexcept {
-        return formatters::fixed<std::int32_t>{value, std::size_t(width)};
+        return formatters::fixed<std::int32_t>{value, unsigned(width)};
     }
 
     inline formatters::fixed<std::uint32_t> fixed(std::uint32_t value, unsigned width) noexcept {
-        return formatters::fixed<std::uint32_t>{value, std::size_t(width)};
+        return formatters::fixed<std::uint32_t>{value, unsigned(width)};
     }
 
     inline formatters::fixed<std::int64_t> fixed(std::int64_t value, unsigned width) noexcept {
-        return formatters::fixed<std::int64_t>{value, std::size_t(width)};
+        return formatters::fixed<std::int64_t>{value, unsigned(width)};
     }
 
     inline formatters::fixed<std::uint64_t> fixed(std::uint64_t value, unsigned width) noexcept {
-        return formatters::fixed<std::uint64_t>{value, std::size_t(width)};
+        return formatters::fixed<std::uint64_t>{value, unsigned(width)};
     }
 
 
@@ -578,8 +539,4 @@ namespace ufmt {
         return formatters::char_n{c, n};
     }
 	
-	inline formatters::decimal<double> decimal(double value, int max_width, int max_precision) noexcept {
-        return formatters::decimal<double>{value, max_width, max_precision};
-    }
-
 } // ufmt
