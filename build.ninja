@@ -10,13 +10,15 @@ dflags = -std=c++20
 inc_dirs = -I./include
 
 rule release_cxx
-  command = c++ $rflags $inc_dirs $in -o $out
+  depfile = $out.deps
+  command = c++ $rflags -MD -MF $out.deps $inc_dirs $in -o $out
 
 build $release_test_file: release_cxx ./test/test.cpp
 build release: phony $release_test_file
 
 rule debug_cxx
-  command = c++ $dflags $inc_dirs $in -o $out
+  depfile = $out.deps
+  command = c++ $dflags -MD -MF $out.deps $inc_dirs $in -o $out
 
 build $debug_test_file: debug_cxx ./test/test.cpp
 build debug: phony $debug_test_file
