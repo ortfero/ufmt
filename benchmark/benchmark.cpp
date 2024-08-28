@@ -1,3 +1,5 @@
+#define FMT_HEADER_ONLY
+
 #include <charconv>
 #include <cstdio>
 #include <iostream>
