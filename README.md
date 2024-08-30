@@ -10,12 +10,12 @@ Drop `include/ufmt` at your include path
 
 ## Tests and benchmark
 
-To build tests and benchmark:
+ufmt uses [just](https://github.com/casey/just) to build tests and benchmark:
 
 ```shell
 cd ufmt
-ninja test
-ninja benchmark
+just test
+just bench
 ```
 
 ## Interface
