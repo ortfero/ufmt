@@ -247,24 +247,27 @@ auto const& text = json.string();
 
 ### Formatting
 
-| Code                                                         | Time (ns) | Ratio |
-|--------------------------------------------------------------|----------:|------:|
-| ```text.format('a');```                                      | 7.7       | x1    |
-| ```snprintf(charz, sizeof (charz), "%c", 'a');```            | 38.4      | x5    |
-| ```fmt::format_to(charz, "{}", 'a');```                      | 13.8      | x1.8  |
-| ```text.format("some literal");```                           | 11.1      | x1    |
-| ```snprintf(charz, sizeof (charz), "%s", "some literal");``` | 38.4      | x3.4  |
-| ```fmt::format_to(charz, "{}", "some literal");```           | 13.6      | x1.2  |
-| ```text.format(-127562);```                                  | 13.9      | x1    |
-| ```snprintf(charz, sizeof (charz), "%d", -127562);```        | 58.9      | x4.2  |
-| ```fmt::format_to(charz, "{}", -127562);```                  | 15.9      | x1.1  |
-| ```std::to_chars(charz, charz + sizeof charz, -127562);```   | l8.2      | x0.6  |
-| ```text.format(-127562.127562);```                           | 45.3      | x1    |
-| ```snprintf(charz, sizeof (charz), "%f", -127562.127562);``` | 237.0     | x5.2  |
-| ```fmt::format_to(charz, "{}", -127562.127562);```           | 88.5      | x1.9  |
+| Code                                                                    | Time (ns) | Ratio |
+|-------------------------------------------------------------------------|----------:|------:|
+| ```text.format('a');```                                                 | 6.0       | x1    |
+| ```snprintf(charz, sizeof (charz), "%c", 'a');```                       | 0.7       | x0.1  |
+| ```fmt::format_to(charz, "{}", 'a');```                                 | 6.5       | x1.1  |
+| ```text.format("some literal");```                                      | 3.8       | x1    |
+| ```snprintf(charz, sizeof (charz), "%s", "some literal");```            | 0.3       | x0.1  |
+| ```fmt::format_to(charz, "{}", "some literal");```                      | 7.2       | x1.9  |
+| ```text.format(-127562);```                                             | 9.8       | x1    |
+| ```snprintf(charz, sizeof (charz), "%d", -127562);```                   | 42.0      | x4.3  |
+| ```fmt::format_to(charz, "{}", -127562);```                             | 14.5      | x1.5  |
+| ```std::to_chars(charz, charz + sizeof charz, -127562);```              | 9.5       | x1    |
+| ```text.format(-127562.127562);```                                      | 23.2      | x1    |
+| ```snprintf(charz, sizeof (charz), "%f", -127562.127562);```            | 123.6     | x5.3  |
+| ```fmt::format_to(charz, "{}", -127562.127562);```                      | 34.2      | x1.5  |
+| ```text.print("nums: ", -1, ", ", -2, ", ", -3)```                      | 8.7       | x1    |
+| ```snprintf(charz, sizeof (charz), "nums: %d, %d, %d", -1, -2, -3)```   | 83.4      | x9.6  |
+| ```fmt::format_to(charz, "nums: {}, {}, {}", -1, -2, -3)```             | 30.3      | x3.5  |
 
 ```
-msvc version 19.29, fmtlib 8.0.1
+Macbook Pro 2022, clang version 15.00, fmtlib 11.0.3
 ```
 
 ## License
