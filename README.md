@@ -1,11 +1,11 @@
 # ufmt
 
-C++17 header-only library to format text
+C++20 header-only library to format text
 
 
-## Usage
+## Installation
 
-Drop `include/ufmt` at your include path
+Drop contents of `include` at your include path
 
 
 ## Tests and benchmark
@@ -53,7 +53,7 @@ using text = basic_text<std::string>;
 ```
 
 
-## Snippets
+## Usage
 
 
 ### Print to output
@@ -245,8 +245,6 @@ auto const& text = json.string();
 
 ## Benchmarks
 
-### Formatting
-
 | Code                                                                    | Time (ns) | Ratio |
 |-------------------------------------------------------------------------|----------:|------:|
 | ```text.format('a');```                                                 | 6.0       | x1    |
@@ -267,7 +265,7 @@ auto const& text = json.string();
 | ```fmt::format_to(charz, "nums: {}, {}, {}", -1, -2, -3)```             | 30.3      | x3.5  |
 
 ```
-Macbook Pro 2022, clang version 15.00, fmtlib 11.0.3
+m2 pro, clang version 15.00, fmtlib 11.0.3
 ```
 
 ## License
