@@ -2,6 +2,7 @@
 
 #include <charconv>
 #include <cstdio>
+#include <format>
 #include <iostream>
 
 #include <fmt/core.h>
@@ -46,9 +47,9 @@ int main() {
         fmt::format_to(charz, "{}", "some literal");
     });
 
-    cout << "texter.print(char[N])    - " << texter_literal << '\n';
-    cout << "snprintf(char[N])        - " << snprintf_literal << '\n';
-    cout << "fmt::format_to(char[N])  - " << fmt_literal << '\n';
+    cout << "texter.print(<char[N]>)    - " << texter_literal << '\n';
+    cout << "snprintf(<char[N]>)        - " << snprintf_literal << '\n';
+    cout << "fmt::format_to(<char[N]>)  - " << fmt_literal << '\n';
     cout << endl;
 
     auto const texter_int = ubench::run([&] {
@@ -64,43 +65,67 @@ int main() {
     auto const tochars_int = ubench::run([&] {
         std::to_chars(charz, charz + sizeof(charz), rand());
     });
+    auto const format_int = ubench::run([&] {
+       std::format_to(charz, "{}", rand());                                     
+    });
 
-    cout << "texter.print(int)     - " << texter_int << '\n';
-    cout << "snprintf(int)         - " << snprintf_int << '\n';
-    cout << "fmt::format_to(int)   - " << fmt_int << '\n';
-    cout << "std::to_chars(int)    - " << tochars_int << '\n';
+    cout << "texter.print(<int>)     - " << texter_int << '\n';
+    cout << "snprintf(<int>)         - " << snprintf_int << '\n';
+    cout << "fmt::format_to(<int>)   - " << fmt_int << '\n';
+    cout << "std::to_chars(<int>)    - " << tochars_int << '\n';
+    cout << "std::format_to(<int>)   - " << format_int << '\n';
     cout << endl;
 
     auto const texter_double = ubench::run([&] {
         text.clear();
-        text.format(-127562.127562);
+        text.format(rand() % 2 ? 123.123 : -123.123);
     });
-    auto const snprintf_double = ubench::run(
-        [&] { snprintf(charz, sizeof(charz), "%f", -127562.127562); });
-    auto const fmt_double =
-        ubench::run([&] { fmt::format_to(charz, "{}", -127562.127562); });
+    auto const snprintf_double = ubench::run([&] {
+        std::snprintf(charz, sizeof(charz), "%f", rand() % 2 ? 123.123 : -123.123);
+    });
+    auto const fmt_double = ubench::run([&] {
+        fmt::format_to(charz, "{}", rand() % 2 ? 123.123 : -123.123);
+    });
+    auto const to_chars_double = ubench::run([&] {
+        std::to_chars(charz, charz + sizeof(charz), rand() % 2 ? 123.123 : -123.123);
+    });
+    auto const format_double = ubench::run([&] {
+       std::format_to(charz, "{}", rand() % 2 ? 123.123 : -123.123);
+    });
 
 
-    cout << "texter.print(double)     - " << texter_double << '\n';
-    cout << "snprintf(double)         - " << snprintf_double << '\n';
-    cout << "fmt::format_to(double)   - " << fmt_double << '\n';
+    cout << "texter.print(<double>)     - " << texter_double << '\n';
+    cout << "snprintf(<double>)         - " << snprintf_double << '\n';
+    cout << "fmt::format_to(<double>)   - " << fmt_double << '\n';
+    cout << "std::to_chars(<double>)    - " << to_chars_double << '\n';
+    cout << "std::format_to(<double>)   - " << format_double << '\n';
     cout << endl;
 
     auto const texter_format = ubench::run([&] {
         text.clear();
-        text.format("nums: ", -1, ", ", -2, ", ", -3);
+        if(rand() % 2)
+            text.format("nums: ", 1, ", ", 123.123, ", ", std::string{"kaka"});
+        else
+            text.format("nums: ", -1, ", ", -123.123, ", ", std::string{"kuku"});
     });
     auto const snprintf_format = ubench::run([&] {
-        snprintf(charz, sizeof(charz), "nums: %d, %d, %d", -1, -2, -3);
+        if(rand() % 2)
+            std::snprintf(charz, sizeof(charz), "nums: %d, %f, %s", 1, 123.123, std::string{"kaka"}.data());
+        else
+            std::snprintf(charz, sizeof(charz), "nums: %d, %f, %s", -1, -123.123, std::string{"kuku"}.data());
     });
-    auto const fmt_format = ubench::run(
-        [&] { fmt::format_to(charz, "nums: {}, {}, {}", -1, -2, -3); });
+    auto const fmt_format = ubench::run([&] {
+        if(rand() %2)
+            fmt::format_to(charz, "nums: {}, {}, {}", 1, 123.123, std::string{"kaka"});
+        else
+            fmt::format_to(charz, "nums: {}, {}, {}", -1, -123.123, std::string{"kuku"});
+    });
 
-    cout << "texter.print('nums: ', -1, ', ', -2, ', ', -3)    - "
+    cout << "texter.print('nums: ', <int>, ', ', <double>, ', ', <string>)    - "
          << texter_format << '\n';
-    cout << "snprintf('nums: %d, %d, %d', -1, -2, -3)          - "
+    cout << "snprintf('nums: %d, %f, %s', <int>, <double>, <string>)          - "
          << snprintf_format << '\n';
-    cout << "fmt::format_to('nums: {}, {}, {}', -1, -2, -3)    - "
+    cout << "fmt::format_to('nums: {}, {}, {}', <int>, <double>, <string>)    - "
          << fmt_format << '\n';
     cout << endl;
 

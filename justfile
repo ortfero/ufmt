@@ -1,7 +1,7 @@
 project := "ufmt"
 test-file := project + "-test"
 bench-file := project + "-bench"
-flags := "-std=c++20 -Iinclude -Ithirdparty/include"
+flags := "-std=c++23 -Iinclude -Ithirdparty/include"
 debug-flags := flags + " -g -O0"
 release-flags := flags + " -O3 -DNDEBUG"
 
