@@ -3,6 +3,10 @@
 
 #include "doctest.h"
 
+#include <array>
+#include <cstdint>
+#include <string>
+#include <string_view>
 #include <ufmt/text.hpp>
 
 
@@ -106,6 +110,48 @@ TEST_SUITE("text") {
         auto const s1 = std::move(target).string();
         REQUIRE(target.string().empty());
         REQUIRE_EQ(s1, "-1");
+    }
+
+
+    SCENARIO("Format int32 extremes") {
+        REQUIRE_EQ(ufmt::text::of(std::int32_t(-2147483647 - 1)), "-2147483648");
+        REQUIRE_EQ(ufmt::text::of(std::int32_t(2147483647)), "2147483647");
+    }
+
+
+    SCENARIO("Format fixed negative") {
+        using ufmt::fixed;
+        REQUIRE_EQ(ufmt::text::of(fixed(-5, 4)), "-005");
+        REQUIRE_EQ(ufmt::text::of(fixed(5, 4)), "0005");
+    }
+
+
+    SCENARIO("Format wide integer types") {
+        REQUIRE_EQ(ufmt::text::of(-1234567890123LL), "-1234567890123");
+        REQUIRE_EQ(ufmt::text::of(std::size_t(18446744073709551615ull)),
+                   "18446744073709551615");
+        REQUIRE_EQ(ufmt::text::of(short(-32768)), "-32768");
+    }
+
+
+    SCENARIO("Format bool") {
+        REQUIRE_EQ(ufmt::text::of(true), "1");
+        REQUIRE_EQ(ufmt::text::of(false), "0");
+    }
+
+
+    SCENARIO("Format array") {
+        std::array<int, 3> const a{1, 2, 3};
+        REQUIRE_EQ(ufmt::text::of(a), "[ 1, 2, 3 ]");
+    }
+
+
+    SCENARIO("Large append into fixed-capacity text") {
+        ufmt::fixed_text t;
+        std::string const big(200, 'x');
+        t << big;
+        REQUIRE_EQ(t.size(), std::size_t(200));
+        REQUIRE_EQ(t.view(), std::string_view{big});
     }
 
 }

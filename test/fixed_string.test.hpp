@@ -2,7 +2,10 @@
 
 #include "doctest.h"
 
+#include <functional>
 #include <sstream>
+#include <string>
+#include <string_view>
 #include <ufmt/fixed_string.hpp>
 
 
@@ -50,6 +53,66 @@ TEST_SUITE("fixed_string") {
         REQUIRE_EQ(target[1], L'e');
         REQUIRE_EQ(target[2], L'x');
         REQUIRE_EQ(target[3], L'\0');
+    }
+
+
+    SCENARIO("Equality across types") {
+        ufmt::string const a{"hello"};
+        REQUIRE(a == ufmt::string{"hello"});
+        REQUIRE(a == "hello");
+        REQUIRE("hello" == a);
+        REQUIRE(a == std::string{"hello"});
+        REQUIRE(a == std::string_view{"hello"});
+        REQUIRE(a != ufmt::string{"world"});
+        REQUIRE(a != "help");
+    }
+
+
+    SCENARIO("Ordering") {
+        REQUIRE(ufmt::string{"abc"} < ufmt::string{"abd"});
+        REQUIRE(ufmt::string{"abc"} > ufmt::string{"abb"});
+        REQUIRE(ufmt::string{"ab"} < ufmt::string{"abc"});    // prefix sorts first
+        REQUIRE(ufmt::string{"abc"} > ufmt::string{"ab"});
+        REQUIRE(ufmt::string{"abc"} <= ufmt::string{"abc"});
+        REQUIRE(ufmt::string{"abc"} >= ufmt::string{"abc"});
+        REQUIRE(ufmt::string{"abc"} < "abd");
+        REQUIRE(ufmt::string{"abc"} < std::string_view{"abd"});
+    }
+
+
+    SCENARIO("Ordering across sizes") {
+        ufmt::fixed_string<8> const a{"abc"};
+        ufmt::fixed_string<32> const b{"abd"};
+        REQUIRE(a < b);
+        REQUIRE(b > a);
+        REQUIRE(a == ufmt::fixed_string<64>{"abc"});
+    }
+
+
+    SCENARIO("Compare prefix vs full") {
+        REQUIRE(ufmt::string{"ab"}.compare("abc") < 0);
+        REQUIRE(ufmt::string{"abc"}.compare("ab") > 0);
+        REQUIRE(ufmt::string{"abc"}.compare("abc") == 0);
+    }
+
+
+    SCENARIO("find_last_of") {
+        ufmt::string const s{"a.b.c"};
+        REQUIRE_EQ(s.find_last_of('.'), std::size_t(3));
+        REQUIRE_EQ(s.find_last_of('x'), ufmt::string::npos);
+        ufmt::string const empty;
+        REQUIRE_EQ(empty.find_last_of('.'), ufmt::string::npos);
+    }
+
+
+    SCENARIO("Hash distinguishes content after embedded NUL") {
+        ufmt::string a;
+        a.append("x\0a", 3);
+        ufmt::string b;
+        b.append("x\0b", 3);
+        REQUIRE_EQ(a.size(), std::size_t(3));
+        std::hash<ufmt::string> const h;
+        REQUIRE(h(a) != h(b));
     }
 
 }

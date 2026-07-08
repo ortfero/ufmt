@@ -96,14 +96,17 @@ namespace ufmt {
         detail::printer::buffer.format(std::forward<Args>(args)..., '\n');
 
 #if defined(_WIN32)
+        DWORD written;
         WriteFile(GetStdHandle(DWORD(-11)),
             detail::printer::buffer.data(),
             DWORD(detail::printer::buffer.size()),
-            nullptr,
+            &written,
             nullptr
         );
 #else
-        write(1, detail::printer::buffer.data(), detail::printer::buffer.size());
+        auto const written =
+            write(1, detail::printer::buffer.data(), detail::printer::buffer.size());
+        (void)written;
 #endif
     }
 
@@ -111,7 +114,7 @@ namespace ufmt {
     template<typename R, typename... Args>
     R print_with(R&& result, Args&&... args) {
         print(std::forward<Args>(args)...);
-        return std::move(std::forward<R>(result));
+        return std::forward<R>(result);
     }
 
 
@@ -123,15 +126,18 @@ namespace ufmt {
 
 #if defined(_WIN32)
 
+        DWORD written;
         WriteFile(GetStdHandle(DWORD(-12)),
             detail::printer::buffer.data(),
             DWORD(detail::printer::buffer.size()),
-            nullptr,
+            &written,
             nullptr
         );
 
 #else
-        write(2, detail::printer::buffer.data(), detail::printer::buffer.size());
+        auto const written =
+            write(2, detail::printer::buffer.data(), detail::printer::buffer.size());
+        (void)written;
 #endif
     }
 
@@ -139,7 +145,7 @@ namespace ufmt {
     template<typename R, typename... Args>
     R error_with(R&& result, Args&&... args) {
         error(std::forward<Args>(args)...);
-        return std::move(std::forward<R>(result));
+        return std::forward<R>(result);
     }
 
 

@@ -5,9 +5,13 @@
 #pragma once
 
 
+#include <array>
+#include <bit>
 #include <charconv>
+#include <concepts>
 #include <cstdint>
 #include <cmath>
+#include <limits>
 #include <span>
 #include <string>
 #include <string_view>
@@ -80,7 +84,7 @@ namespace ufmt {
             if(next_size > string_.capacity()) {
                 auto const reserve_size = nearest_power_of_2(next_size);
                 string_.reserve(reserve_size);
-                if(string_.capacity() < reserve_size)
+                if(string_.capacity() < next_size)
                     return nullptr;
             }
             string_.resize(next_size);
@@ -96,13 +100,11 @@ namespace ufmt {
         basic_text& append(value_type const* stringz, size_type n) {
             if(n == 0)
                 return *this;
-            value_type* p = allocate(n);
+            value_type* const p = allocate(n);
             if(!p)
                 return *this;
-            value_type const* end = stringz + n;
-            for(value_type const* from = stringz; from != end; ++from, ++p)
-                *p = *from;
-            free(p);
+            std::char_traits<value_type>::copy(p, stringz, n);
+            free(p + n);
             return *this;
         }
 
@@ -110,23 +112,17 @@ namespace ufmt {
         void char_n(value_type ch, size_type n) {
             if(n == 0)
                 return;
-            value_type* p = allocate(n);
+            value_type* const p = allocate(n);
             if(!p)
                 return;
-            for(value_type* end = p + n; p != end; ++p)
-                *p = ch;
-            free(p);
+            std::char_traits<value_type>::assign(p, n, ch);
+            free(p + n);
         }
 
 
-        void format() {
-        }
-
-
-        template<typename Arg, typename... Args>
-        void format(Arg&& arg, Args&&... args) {
-            (*this) << arg;
-            format(std::forward<Args>(args)...);
+        template<typename... Args>
+        void format(Args&&... args) {
+            ((*this) << ... << args);
         }
 
 
@@ -135,15 +131,7 @@ namespace ufmt {
         static uint64_t nearest_power_of_2(uint64_t n) {
             if(n <= 2)
                 return 2;
-            n--;
-            n |= n >> 1;
-            n |= n >> 2;
-            n |= n >> 4;
-            n |= n >> 8;
-            n |= n >> 16;
-            n |= n >> 32;
-            n++;
-            return n;
+            return std::bit_ceil(n);
         }
     }; // basic_text
 
@@ -198,54 +186,43 @@ namespace ufmt {
             if(!p)
                 return self;
             auto const r = std::to_chars(p, p + N, value);
-			if(r.ec == std::errc{}) {
-				self.free(r.ptr);
-			} else {
-				self.free(p);
-			}
-
+            if(r.ec == std::errc{})
+                self.free(r.ptr);
+            else
+                self.free(p);
             return self;
         }
 
 
-        template<std::size_t N, class S>
-        basic_text<S>& print_number(basic_text<S>& self, double value) {
-            typename S::value_type* p = self.allocate(N);
-            if(!p)
-                return self;
-            auto const r = std::to_chars(p, p + N, value);
-			if(r.ec == std::errc{}) {
-				self.free(r.ptr);
-			} else {
-				self.free(p);
-			}
+        template<class S, class Range>
+        basic_text<S>& print_range(basic_text<S>& self, Range const& value) {
+            self << '[';
+            if(!value.empty()) {
+                auto it = value.begin();
+                self << ' ' << *it;
+                ++it;
+                for(; it != value.end(); ++it)
+                    self << ',' << ' ' << *it;
+            }
+            self << ' ' << ']';
             return self;
         }
 
     } // detail
 
 
-    template<class S>
-    basic_text<S>& operator << (basic_text<S>& self, std::int32_t value) {
-        return detail::print_number<10>(self, value);
+    template<class S, std::integral T>
+        requires(!std::same_as<T, bool>
+                 && !std::same_as<T, typename S::value_type>)
+    basic_text<S>& operator << (basic_text<S>& self, T value) {
+        constexpr std::size_t digits = std::numeric_limits<T>::digits10 + 3;
+        return detail::print_number<digits>(self, value);
     }
 
 
     template<class S>
-    basic_text<S>& operator << (basic_text<S>& self, std::uint32_t value) {
-        return detail::print_number<11>(self, value);
-    }
-
-
-    template<class S>
-    basic_text<S>& operator << (basic_text<S>& self, std::int64_t value) {
-        return detail::print_number<20>(self, value);
-    }
-
-
-    template<class S>
-    basic_text<S>& operator << (basic_text<S>& self, std::uint64_t value) {
-        return detail::print_number<20>(self, value);
+    basic_text<S>& operator << (basic_text<S>& self, bool value) {
+        return self << std::int32_t(value);
     }
 
 
@@ -264,32 +241,21 @@ namespace ufmt {
     template<class S, typename T>
     basic_text<S>& operator << (basic_text<S>& self,
                                 std::vector<T> const& value) {
-        self << '[';
-        if(!value.empty()) {
-            auto it = value.begin();
-            self << ' ' << *it;
-            ++it;
-            for(; it != value.end(); ++it)
-                self << ',' << ' ' << *it;
-        }
-        self << ' ' << ']';
-        return self;
+        return detail::print_range(self, value);
     }
 
 
-    template<class S, typename T>
+    template<class S, typename T, std::size_t N>
     basic_text<S>& operator << (basic_text<S>& self,
-                                std::span<T> const& value) {
-        self << '[';
-        if(!value.empty()) {
-            auto it = value.begin();
-            self << ' ' << *it;
-            ++it;
-            for(; it != value.end(); ++it)
-                self << ',' << ' ' << *it;
-        }
-        self << ' ' << ']';
-        return self;
+                                std::array<T, N> const& value) {
+        return detail::print_range(self, value);
+    }
+
+
+    template<class S, typename T, std::size_t E>
+    basic_text<S>& operator << (basic_text<S>& self,
+                                std::span<T, E> const& value) {
+        return detail::print_range(self, value);
     }
 
 
@@ -333,6 +299,8 @@ namespace ufmt {
                 return self;
             auto const spaces_count = r.width - value_size;
             self.char_n(' ', spaces_count);
+            if(self.size() != next_size + spaces_count)
+                return self;   // buffer full: leave the value unpadded
             for(auto i = next_size - 1; i != original_size - 1; --i)
                 self[i + spaces_count] = self[i];
             for(std::size_t i = 0; i != spaces_count; ++i)
@@ -357,11 +325,10 @@ namespace ufmt {
         #if defined(_MSC_VER)
             auto const r = std::to_chars(p, p + float_digits, f.value,
                                          std::chars_format::fixed, f.precision);
-            if(r.ec == std::errc{}) {
-				self.free(r.ptr);
-			} else {
-				self.free(p);
-			}
+            if(r.ec == std::errc{})
+                self.free(r.ptr);
+            else
+                self.free(p);
         #else
             auto const n = std::snprintf(p, float_digits, "%.*f", f.precision, f.value);
             if(n <= 0) self.free(p); else self.free(p + n);
@@ -387,10 +354,17 @@ namespace ufmt {
                 return self;
             auto const spaces_count = f.width - value_size;
             self.char_n('0', spaces_count);
-            for(auto i = next_size - 1; i != original_size - 1; --i)
+            if(self.size() != next_size + spaces_count)
+                return self;   // buffer full: leave the value unpadded
+            // Zero-fill goes after a leading sign, not before it.
+            std::size_t const sign =
+                (value_size != 0
+                 && (self[original_size] == '-' || self[original_size] == '+'))
+                    ? 1u : 0u;
+            for(auto i = next_size - 1; i != original_size + sign - 1; --i)
                 self[i + spaces_count] = self[i];
             for(std::size_t i = 0; i != spaces_count; ++i)
-                self[original_size + i] = '0';
+                self[original_size + sign + i] = '0';
             return self;
         }
 

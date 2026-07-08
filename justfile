@@ -1,6 +1,9 @@
 project := "ufmt"
 test-file := project + "-test"
 bench-file := project + "-bench"
+# Compiler used to build test/bench binaries. Override with e.g.
+#   just cxx="c++" test
+cxx := env_var_or_default("CXX", "zig c++")
 flags := "-std=c++23 -Iinclude -Ithirdparty/include"
 debug-flags := flags + " -g -O0"
 release-flags := flags + " -O3 -DNDEBUG"
@@ -11,11 +14,11 @@ default: test
 
 build-test:
     mkdir -p build
-    c++ test/test.cpp -o build/{{test-file}} {{debug-flags}}
+    {{cxx}} test/test.cpp -o build/{{test-file}} {{debug-flags}}
 
 build-bench:
     mkdir -p build
-    c++ benchmark/benchmark.cpp -o build/{{bench-file}} {{release-flags}}
+    {{cxx}} benchmark/benchmark.cpp -o build/{{bench-file}} {{release-flags}}
 
 build: build-test build-bench
 

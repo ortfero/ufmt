@@ -1,7 +1,10 @@
 #pragma once
 
 
-#include <optional> 
+#include <cmath>
+#include <limits>
+#include <optional>
+#include <string_view>
 
 #include "doctest.h"
 
@@ -58,5 +61,43 @@ TEST_SUITE("json") {
         REQUIRE_EQ(ufmt::json::of(point3d{-1, -2, -3}), R"({"x":-1,"y":-2,"z":-3})");
         REQUIRE_EQ(ufmt::json::of(point3d{-1, -2, std::nullopt}), R"({"x":-1,"y":-2})");
     }
-    
+
+
+    SCENARIO("Escape special characters") {
+        REQUIRE_EQ(ufmt::json::of("x", "a\"b"), R"({"x":"a\"b"})");
+        REQUIRE_EQ(ufmt::json::of("x", "a\\b"), R"({"x":"a\\b"})");
+        REQUIRE_EQ(ufmt::json::of("x", "a\nb"), R"({"x":"a\nb"})");
+        REQUIRE_EQ(ufmt::json::of("x", "a\tb"), R"({"x":"a\tb"})");
+        REQUIRE_EQ(ufmt::json::of("x", std::string_view{"\x01", 1}), R"({"x":"\u0001"})");
+    }
+
+
+    SCENARIO("Non-finite double becomes null") {
+        REQUIRE_EQ(ufmt::json::of("x", std::numeric_limits<double>::infinity()),
+                   R"({"x":null})");
+        REQUIRE_EQ(ufmt::json::of("x", std::numeric_limits<double>::quiet_NaN()),
+                   R"({"x":null})");
+    }
+
+
+    SCENARIO("Wide integer values") {
+        REQUIRE_EQ(ufmt::json::of("x", -1234567890123LL), R"({"x":-1234567890123})");
+        REQUIRE_EQ(ufmt::json::of("x", std::size_t(42)), R"({"x":42})");
+    }
+
+
+    struct opt_first {
+        std::optional<int> a;
+        int b;
+    };
+
+    template<class S> ufmt::basic_json<S>& operator << (ufmt::basic_json<S>& json, opt_first const& v) {
+        return json << ufmt::object("a", v.a, "b", v.b);
+    }
+
+    SCENARIO("Optional as first field") {
+        REQUIRE_EQ(ufmt::json::of(opt_first{5, 7}), R"({"a":5,"b":7})");
+        REQUIRE_EQ(ufmt::json::of(opt_first{std::nullopt, 7}), R"({"b":7})");
+    }
+
 }

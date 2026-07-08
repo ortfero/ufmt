@@ -6,8 +6,10 @@
 
 
 #include <array>
+#include <compare>
 #include <cstddef>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 
 
@@ -223,9 +225,7 @@ namespace ufmt {
             size_type const m = static_cast<size_type>(e - b);
             size_type const l = N - n_;
             size_type const n = m > l ? l : m;
-            e = b + n;
-            for(char* p = p_ + n_; b != e; ++p, ++b)
-                *p = *b;
+            std::char_traits<char>::copy(p_ + n_, b, n);
             n_ += n;
             p_[n_] = '\0';
             return *this;
@@ -262,7 +262,7 @@ namespace ufmt {
             return assign(rhs.data(), rhs.data() + rhs.size());
         }
 
-        template<int M> constexpr
+        template<std::size_t M> constexpr
         fixed_string& assign(fixed_string<M> const& rhs) noexcept {
             return assign(rhs.data(), rhs.data() + rhs.size());
         }
@@ -317,13 +317,19 @@ namespace ufmt {
         }
 
         constexpr size_type find_last_of(char c) const noexcept {
+            if(n_ == 0)
+                return npos;
             return find_last_of(c, n_ - 1);
         }
 
         constexpr size_type find_last_of(char c, size_type i) const noexcept {
-            for(char const* p = p_ + i; p != p_ - 1; --p)
-                if(*p == c)
-                    return static_cast<size_type>(p - p_);
+            if(n_ == 0)
+                return npos;
+            if(i >= n_)
+                i = n_ - 1;
+            for(size_type j = i + 1; j != 0; --j)
+                if(p_[j - 1] == c)
+                    return j - 1;
             return npos;
         }
 
@@ -335,60 +341,47 @@ namespace ufmt {
             return compare(rhs.begin(), rhs.end());
         }
 
-        template<int M> constexpr
+        template<std::size_t M> constexpr
         int compare(fixed_string<M> const& rhs) const noexcept {
-            return compare(rhs.begin(), rhs.end());
+            return compare(rhs.data(), rhs.data() + rhs.size());
         }
 
         constexpr int compare(std::string const& rhs) const noexcept {
-            return compare(rhs.begin(), rhs.end());
+            return compare(rhs.data(), rhs.data() + rhs.size());
         }
 
         constexpr int compare(std::string_view const& rhs) const noexcept {
-            return compare(rhs.begin(), rhs.end());
+            return compare(rhs.data(), rhs.data() + rhs.size());
         }
 
         constexpr int compare(char const* b, char const* e) const noexcept {
-            if(b == e)
-                return n_ == 0 ? 0 : 1;
-            char const* c = p_;
-            while(*c == *b && b != e) {
-                ++c;
-                ++b;
-            }
-            if(b == e)
-                return 0;
-            else if(*c > *b)
-                return 1;
-            else
+            size_type const m = (b == nullptr || e == nullptr)
+                                    ? size_type(0)
+                                    : static_cast<size_type>(e - b);
+            size_type const k = n_ < m ? n_ : m;
+            int const r = std::char_traits<char>::compare(p_, b, k);
+            if(r != 0)
+                return r < 0 ? -1 : 1;
+            if(n_ < m)
                 return -1;
+            if(n_ > m)
+                return 1;
+            return 0;
         }
 
         constexpr int compare(char const* s) const noexcept {
             if(s == nullptr)
                 return n_ == 0 ? 0 : 1;
-            char const* c = p_;
-            while(*c == *s && *c != '\0') {
-                ++c;
-                ++s;
-            }
-            if(*c == *s)
-                return 0;
-            else if(*c > *s)
-                return 1;
-            else
-                return -1;
+            return compare(s, s + std::char_traits<char>::length(s));
         }
         
         
         constexpr void copy_to(char* data, size_type m) const noexcept {
+            if(m == 0)
+                return;
             auto const n = n_ < m - 1 ? n_ : m - 1;
-            char const* c = p_;
-            char* d = data;
-            char const* e = p_ + n;
-            while(c != e)
-                *d++ = *c++;
-            *d = '\0';
+            std::char_traits<char>::copy(data, p_, n);
+            data[n] = '\0';
         }
 
 
@@ -405,6 +398,8 @@ namespace ufmt {
 
 
         constexpr void copy_to(wchar_t* data, size_type m) const noexcept {
+            if(m == 0)
+                return;
             auto const n = n_ < m - 1 ? n_ : m - 1;
             char const* c = p_;
             wchar_t* d = data;
@@ -459,260 +454,39 @@ namespace ufmt {
 
 
     template<std::size_t N> constexpr
-    std::string& operator+=(std::string const& x, fixed_string<N> const& y) {
+    std::string& operator+=(std::string& x, fixed_string<N> const& y) {
         return x.append(y.data(), y.size());
     }
 
 
+    // Comparisons. Defining operator== and operator<=> is enough: C++20
+    // synthesizes !=, <, <=, >, >= and the reversed-argument candidates.
+    // The std::string_view overload also serves char const* and std::string
+    // via their implicit conversion to string_view.
+
     template<std::size_t N, std::size_t M> constexpr
-    bool operator==(fixed_string<N> const& x, fixed_string<M> const& y) {
+    bool operator==(fixed_string<N> const& x, fixed_string<M> const& y) noexcept {
+        return x.compare(y) == 0;
+    }
+
+
+    template<std::size_t N, std::size_t M> constexpr
+    std::strong_ordering operator<=>(fixed_string<N> const& x,
+                                     fixed_string<M> const& y) noexcept {
+        return x.compare(y) <=> 0;
+    }
+
+
+    template<std::size_t N> constexpr
+    bool operator==(fixed_string<N> const& x, std::string_view y) noexcept {
         return x.compare(y) == 0;
     }
 
 
     template<std::size_t N> constexpr
-    bool operator==(fixed_string<N> const& x, char const* y) {
-        return x.compare(y) == 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator==(char const* x, fixed_string<N> const& y) {
-        return y.compare(x) == 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator==(fixed_string<N> const& x, std::string const& y) {
-        return x.compare(y) == 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator==(std::string const& x, fixed_string<N> const& y) {
-        return y.compare(x) == 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator==(fixed_string<N> const& x, std::string_view const& y) {
-        return x.compare(y) == 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator==(std::string_view const& x, fixed_string<N> const& y) {
-        return y.compare(x) == 0;
-    }
-
-
-    template<std::size_t N, std::size_t M> constexpr
-    bool operator!=(fixed_string<N> const& x, fixed_string<M> const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator!=(fixed_string<N> const& x, char const* y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator!=(char const* x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator!=(fixed_string<N> const& x, std::string const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator!=(std::string const& x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator!=(fixed_string<N> const& x, std::string_view const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator!=(std::string_view const& x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N, std::size_t M> constexpr
-    bool operator<(fixed_string<N> const& x, fixed_string<M> const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<(fixed_string<N> const& x, char const* y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<(char const* x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<(fixed_string<N> const& x, std::string const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<(std::string const& x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<(fixed_string<N> const& x, std::string_view const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<(std::string_view const& x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N, std::size_t M> constexpr
-    bool operator<=(fixed_string<N> const& x, fixed_string<M> const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<=(fixed_string<N> const& x, char const* y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<=(char const* x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<=(fixed_string<N> const& x, std::string const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<=(std::string const& x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<=(fixed_string<N> const& x, std::string_view const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator<=(std::string_view const& x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N, std::size_t M> constexpr
-    bool operator>(fixed_string<N> const& x, fixed_string<M> const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>(fixed_string<N> const& x, char const* y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>(char const* x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>(fixed_string<N> const& x, std::string const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>(std::string const& x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>(fixed_string<N> const& x, std::string_view const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>(std::string_view const& x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N, std::size_t M> constexpr
-    bool operator>=(fixed_string<N> const& x, fixed_string<M> const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>=(fixed_string<N> const& x, char const* y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>=(char const* x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>=(fixed_string<N> const& x, std::string const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>=(std::string const& x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>=(fixed_string<N> const& x, std::string_view const& y) {
-        return x.compare(y) != 0;
-    }
-
-
-    template<std::size_t N> constexpr
-    bool operator>=(std::string_view const& x, fixed_string<N> const& y) {
-        return y.compare(x) != 0;
+    std::strong_ordering operator<=>(fixed_string<N> const& x,
+                                     std::string_view y) noexcept {
+        return x.compare(y) <=> 0;
     }
 
 
@@ -723,7 +497,7 @@ namespace ufmt {
     }
 
 
-}   // namespace nonstd
+}   // namespace ufmt
 
 
 
@@ -734,9 +508,8 @@ namespace std {
     struct hash<ufmt::fixed_string<N>> {
         constexpr size_t operator()(ufmt::fixed_string<N> const& s) const {
             size_t h = 0;
-            char const* cc = s.data();
-            while(*cc)
-                h = h * 101 + static_cast<size_t>(*cc++);
+            for(char c: s)
+                h = h * 101 + static_cast<size_t>(static_cast<unsigned char>(c));
             return h;
         }
 

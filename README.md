@@ -24,15 +24,17 @@ just bench
 template<typename S>
 class basic_text {
 public:
-    
+
     using size_type = std::size_t;
     using value_type = typename S::value_type;
-    
+
     template<typename... Args>
-    static basic_text of(Args&&... args);    
-        
-    S const& string() const noexcept;
+    static S of(Args&&... args);
+
+    S const& string() const & noexcept;
+    S&& string() && noexcept;                 // move the buffer out
     value_type const* data() const noexcept;
+    std::string_view view() const noexcept;
     size_type size() const noexcept;
     bool empty() const noexcept;
     void clear() noexcept;
@@ -44,12 +46,17 @@ public:
     void free(value_type* p);
     basic_text& append(value_type const* stringz, size_type n);
     void char_n(value_type ch, size_type n);
-    
+
     template<typename... Args>
     void format(Args&&... args);
 };
 
-using text = basic_text<std::string>;
+// operator<< is provided for: any integral type, float/double, bool,
+// std::string/std::string_view/char, std::vector/std::array/std::span.
+
+using text = basic_text<std::string>;                 // grows on the heap
+using short_text = basic_text<short_string>;          // inline fixed buffer
+using fixed_text = basic_text<string>;                // inline fixed buffer
 ```
 
 
@@ -158,6 +165,62 @@ template<typename S> S& operator << (S& stream, point const& p) {
 ```
 
 
+### Boolean and repeated characters
+
+```cpp
+using ufmt::boolean;
+using ufmt::char_n;
+auto r = ufmt::text::of(boolean(true), ' ', char_n('*', 3));
+// "true ***"
+```
+
+
+## Fixed-capacity strings
+
+`ufmt::fixed_string<N>` is a value-type string with an inline buffer of `N`
+bytes (no heap allocation). Several sized aliases are provided, and each can
+back a `basic_text`/`basic_json` for allocation-free formatting:
+
+```cpp
+#include <ufmt/fixed_string.hpp>
+
+ufmt::short_string s{"abc"};   // ~96 bytes total
+// ufmt::string        - ~256 bytes
+// ufmt::long_string   - ~1024 bytes
+// ufmt::page_string   - ~4096 bytes
+
+// Comparisons follow lexicographic ordering and interoperate with
+// std::string, std::string_view and const char*:
+bool less = ufmt::string{"ab"} < ufmt::string{"abc"};   // true
+bool eq   = ufmt::string{"abc"} == "abc";               // true
+```
+
+
+## File output
+
+`text_file` (raw, unbuffered) and `buffered_file` (`FILE*`-backed) format
+directly into a file. Factories return `std::optional<...>` and set an
+`std::error_code` on failure:
+
+```cpp
+#include <ufmt/text_file.hpp>
+
+std::error_code ec;
+auto file = ufmt::text_file<>::create_always("out.txt", ec);
+if(file)
+    file->print("value: ", 127.562);   // appends a trailing '\n'
+```
+
+```cpp
+#include <ufmt/buffered_file.hpp>
+
+std::error_code ec;
+auto file = ufmt::buffered_file<>::open_always_to_append("log.txt", ec);
+if(file)
+    file->write("raw bytes, no newline", ec);
+```
+
+
 ## JSON formatting
 
 ### Format object
@@ -169,6 +232,14 @@ template<typename S> S& operator << (S& stream, point const& p) {
 
 std::string const& text = ufmt::json::of("x", -1, "y", 3.14, "z", "ok");
 // text == R"({"x":-1,"y":3.14,"z":"ok"})"
+```
+
+String values are escaped (`"`, `\`, and control characters), and non-finite
+doubles are emitted as `null`, so the output is always valid JSON:
+
+```cpp
+auto const& text = ufmt::json::of("msg", "line1\nline2");
+// text == R"({"msg":"line1\nline2"})"
 ```
 
 

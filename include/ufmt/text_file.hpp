@@ -53,7 +53,7 @@
 		using handle_type = HANDLE;
 		
 		static auto constexpr file_read_data = DWORD(1);
-		static auto constexpr file_write_data = DWORD(1);
+		static auto constexpr file_write_data = DWORD(2);
 		static auto constexpr file_append_data = DWORD(4);
 		static auto constexpr file_share_read = DWORD(1);
 		static auto constexpr create_always_flag = DWORD(2);
@@ -160,32 +160,46 @@
 		}
 		
 		
-		bool write(std::string_view sv, std::error_code& ec) noexcept {
+		bool write_all(char const* data, std::size_t size, std::error_code& ec) noexcept {
 #if defined(_WIN32)
-			if(!WriteFile(handle_, text_.data(), text_.size(), nullptr, nullptr)) {
-				ec = {int(GetLastError()), std::system_category()};
-				return false;
+			while(size != 0) {
+				DWORD written = 0;
+				DWORD const chunk = size > DWORD(-1) ? DWORD(-1) : DWORD(size);
+				if(!WriteFile(handle_, data, chunk, &written, nullptr)) {
+					ec = {int(GetLastError()), std::system_category()};
+					return false;
+				}
+				data += written;
+				size -= written;
 			}
 #else
-			if(::write(handle_, text_.data(), text_.size()) == -1) {
-				ec = {errno, std::system_category()};
-				return false;
+			while(size != 0) {
+				auto const n = ::write(handle_, data, size);
+				if(n < 0) {
+					if(errno == EINTR)
+						continue;
+					ec = {errno, std::system_category()};
+					return false;
+				}
+				data += n;
+				size -= std::size_t(n);
 			}
 #endif
 			return true;
 		}
 
-		
+
+		bool write(std::string_view sv, std::error_code& ec) noexcept {
+			return write_all(sv.data(), sv.size(), ec);
+		}
+
+
 		template<typename... Args>
 		void print(Args&&... args) {
 			text_.clear();
 			text_.format(std::forward<Args>(args)..., '\n');
-
-#if defined(_WIN32)
-			WriteFile(handle_, text_.data(), text_.size(), nullptr, nullptr);
-#else
-			::write(handle_, text_.data(), text_.size());
-#endif
+			std::error_code ec;
+			write_all(text_.data(), text_.size(), ec);
 		}
 		
 		

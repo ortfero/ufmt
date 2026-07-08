@@ -6,6 +6,8 @@
 
 
 #include <array>
+#include <cmath>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -82,32 +84,19 @@ namespace ufmt {
         std::string_view view() const noexcept { return text_.view(); }
         void reserve(size_type n) { text_.reserve(n); }
                 
-        basic_json& operator << (std::int32_t arg) {
+        template<std::integral T>
+            requires(!std::same_as<T, bool> && !std::same_as<T, char>)
+        basic_json& operator << (T arg) {
             text_ << arg;
             return *this;
         }
 
-        
-        basic_json& operator << (std::uint32_t arg) {
-            text_ << arg;
-            return *this;
-        }
 
-                
-        basic_json& operator << (std::int64_t arg) {
-            text_ << arg;
-            return *this;
-        }
-
-        
-        basic_json& operator << (std::uint64_t arg) {
-            text_ << arg;
-            return *this;
-        }
-
-        
         basic_json& operator << (double arg) {
-            text_ << arg;
+            if(std::isfinite(arg))
+                text_ << arg;
+            else
+                text_ << "null";
             return *this;
         }
 
@@ -134,32 +123,27 @@ namespace ufmt {
 
         
         template<std::size_t N> basic_json& operator << (char const (&arg)[N]) {
-            text_ << '\"' << arg << '\"';
-            return *this;
+            return emit_string(std::string_view{arg, N - 1});
         }
 
-        
+
         basic_json& operator << (std::string_view arg) {
-            text_ << '\"' << arg << '\"';
-            return *this;
+            return emit_string(arg);
         }
 
-        
+
         basic_json& operator << (char arg) {
-            text_ << '\"' << arg << '\"';
-            return *this;
+            return emit_string(std::string_view{&arg, 1});
         }
 
-        
+
         basic_json& operator << (std::string const& arg) {
-            text_ << '\"' << arg << '\"';
-            return *this;
+            return emit_string(std::string_view{arg});
         }
 
-        
+
         template<std::size_t N> basic_json& operator << (fixed_string<N> const& arg) {
-            text_ << '\"' << arg << '\"';
-            return *this;
+            return emit_string(arg.view());
         }
         
         
@@ -178,28 +162,23 @@ namespace ufmt {
         }
         
         
-        template<typename... Args> basic_json& operator << (std::tuple<> const& ) {
+        basic_json& operator << (std::tuple<> const& ) {
             text_ << "{}";
             return *this;
         }
-        
-        
+
+
         template<typename Arg, typename... Args> basic_json& operator << (std::tuple<field<Arg>, field<Args>...> const& arg) {
-            text_ << "{\"" << std::get<0>(arg).name << "\":";
-            (*this) << std::get<0>(arg).value;
-            format_object(std::apply([](auto&&, auto&&... args) { return std::tie(args...);}, arg));
+            text_ << '{';
+            bool first = true;
+            format_object(first, arg);
             text_ << '}';
             return *this;
         }
-        
-        
-        // template<typename T> basic_json& operator << (std::span<T> arg) {
-            // return format_array(arg);
-        // }
-        
-        
+
+
     private:
-    
+
         template<class C> basic_json& format_array(C const& arg) {
             text_ << '[';
             if(!arg.empty()) {
@@ -210,54 +189,85 @@ namespace ufmt {
                     text_ << ',';
                     (*this) << *it;
                     ++it;
-                }                
+                }
             }
             text_ << ']';
             return *this;
         }
-        
-        void format() {
+
+
+        basic_json& emit_string(std::string_view s) {
+            text_ << '\"';
+            escape(s);
+            text_ << '\"';
+            return *this;
         }
 
-        template<std::size_t N, typename Arg, typename... Args>
-        void format(char const (&name)[N], Arg&& arg, Args&&... args) {
-            text_ << ",\"" << name << "\":";
-            (*this) << std::forward<Arg>(arg);
-            format(std::forward<Args>(args)...);
+
+        void escape(std::string_view s) {
+            static constexpr char hex[] = "0123456789abcdef";
+            for(char c: s) {
+                switch(c) {
+                case '\"': text_ << "\\\""; break;
+                case '\\': text_ << "\\\\"; break;
+                case '\b': text_ << "\\b"; break;
+                case '\f': text_ << "\\f"; break;
+                case '\n': text_ << "\\n"; break;
+                case '\r': text_ << "\\r"; break;
+                case '\t': text_ << "\\t"; break;
+                default:
+                    if(static_cast<unsigned char>(c) < 0x20) {
+                        auto const u = static_cast<unsigned char>(c);
+                        text_ << "\\u00" << hex[(u >> 4) & 0xF] << hex[u & 0xF];
+                    } else {
+                        text_ << c;
+                    }
+                }
+            }
         }
 
 
-        void format_object(std::tuple<> const&) {
-        }        
-
-        template<typename Arg, typename... Args>
-        void format_object(std::tuple<field<Arg> const&, field<Args> const&...> const& arg) {
-            format_field(std::get<0>(arg));
-            format_object(std::apply([](auto&&, auto&&... args) { return std::tie(args...); }, arg));
+        void format_object(bool&, std::tuple<> const&) {
         }
-        
+
+        template<typename Tuple>
+        void format_object(bool& first, Tuple const& arg) {
+            format_field(first, std::get<0>(arg));
+            format_object(first,
+                std::apply([](auto&&, auto&&... rest) { return std::tie(rest...); }, arg));
+        }
+
 
         template<typename Arg>
-        void format_field(field<Arg> f) {
-            text_ << ',' << '\"' << f.name << '\"' << ':';
-            (*this) << f.value; 
+        void format_field(bool& first, field<Arg> f) {
+            emit_field_name(first, f.name);
+            (*this) << f.value;
         }
 
         template<typename Arg>
-        void format_field(field<std::optional<Arg> const&> f) {
+        void format_field(bool& first, field<std::optional<Arg> const&> f) {
             if(!f.value.has_value())
                 return;
-            text_ << ',' << '\"' << f.name << '\"' << ':';
+            emit_field_name(first, f.name);
             (*this) << *f.value;
         }
 
         template<typename Arg>
-        void format_field(field<std::optional<Arg>&> f) {
+        void format_field(bool& first, field<std::optional<Arg>&> f) {
             if(!f.value.has_value())
                 return;
-            text_ << ',' << '\"' << f.name << '\"' << ':';
+            emit_field_name(first, f.name);
             (*this) << *f.value;
-        }        
+        }
+
+        void emit_field_name(bool& first, std::string_view name) {
+            if(!first)
+                text_ << ',';
+            first = false;
+            text_ << '\"';
+            escape(name);
+            text_ << "\":";
+        }
     }; // basic_json
     
     
