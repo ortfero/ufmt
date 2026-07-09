@@ -17,12 +17,23 @@
 #include <string_view>
 #include <system_error>
 #include <vector>
+#include <version>
 
 #if defined(_MSC_VER)
 #include <cstdio>
 #endif
 
 #include <ufmt/fixed_string.hpp>
+
+
+// Integer std::to_chars is constexpr since C++23 (P2291). When the standard
+// library provides it, the integer formatting path can run at compile time;
+// otherwise it degrades to runtime-only rather than being ill-formed.
+#if defined(__cpp_lib_constexpr_charconv)
+#  define UFMT_CONSTEXPR_NUM constexpr
+#else
+#  define UFMT_CONSTEXPR_NUM
+#endif
 
 
 namespace ufmt {
@@ -41,36 +52,36 @@ namespace ufmt {
 
 
         template<typename... Args>
-        static S of(Args&&... args) {
+        static constexpr S of(Args&&... args) {
             basic_text t;
             t.format(std::forward<Args>(args)...);
             return t.string_;
         }
 
 
-        basic_text() noexcept = default;
-        basic_text(basic_text const&) = default;
-        basic_text& operator=(basic_text const&) = default;
-        basic_text(basic_text&&) noexcept = default;
-        basic_text& operator=(basic_text&&) noexcept = default;
+        constexpr basic_text() noexcept = default;
+        constexpr basic_text(basic_text const&) = default;
+        constexpr basic_text& operator=(basic_text const&) = default;
+        constexpr basic_text(basic_text&&) noexcept = default;
+        constexpr basic_text& operator=(basic_text&&) noexcept = default;
 
-        S const& string() const & noexcept { return string_; }
-        S&& string() && noexcept { return std::move(string_); }
-        value_type const* data() const noexcept { return string_.data(); }
-        size_type size() const noexcept { return string_.size(); }
-        bool empty() const noexcept { return string_.empty(); }
-        void clear() noexcept { string_.clear(); }
-        size_type capacity() const noexcept { return string_.capacity(); }        
-        value_type operator[](size_type i) const noexcept { return string_[i]; }
-        value_type& operator[](size_type i) noexcept { return string_[i]; }
-        
-        
-        std::string_view view() const noexcept {
+        constexpr S const& string() const & noexcept { return string_; }
+        constexpr S&& string() && noexcept { return std::move(string_); }
+        constexpr value_type const* data() const noexcept { return string_.data(); }
+        constexpr size_type size() const noexcept { return string_.size(); }
+        constexpr bool empty() const noexcept { return string_.empty(); }
+        constexpr void clear() noexcept { string_.clear(); }
+        constexpr size_type capacity() const noexcept { return string_.capacity(); }
+        constexpr value_type operator[](size_type i) const noexcept { return string_[i]; }
+        constexpr value_type& operator[](size_type i) noexcept { return string_[i]; }
+
+
+        constexpr std::string_view view() const noexcept {
             return std::string_view{string_.data(), string_.size()};
         }
 
 
-        void reserve(size_type n) {
+        constexpr void reserve(size_type n) {
             if(n <= string_.capacity())
                 return;
             n = nearest_power_of_2(n);
@@ -78,7 +89,7 @@ namespace ufmt {
         }
 
 
-        value_type* allocate(size_type n) {
+        constexpr value_type* allocate(size_type n) {
             auto const original_size = string_.size();
             auto const next_size = original_size + n;
             if(next_size > string_.capacity()) {
@@ -92,12 +103,12 @@ namespace ufmt {
         }
 
 
-        void free(value_type* p) {
+        constexpr void free(value_type* p) {
             string_.resize(size_type(p - string_.data()));
         }
 
 
-        basic_text& append(value_type const* stringz, size_type n) {
+        constexpr basic_text& append(value_type const* stringz, size_type n) {
             if(n == 0)
                 return *this;
             value_type* const p = allocate(n);
@@ -109,7 +120,7 @@ namespace ufmt {
         }
 
 
-        void char_n(value_type ch, size_type n) {
+        constexpr void char_n(value_type ch, size_type n) {
             if(n == 0)
                 return;
             value_type* const p = allocate(n);
@@ -121,14 +132,14 @@ namespace ufmt {
 
 
         template<typename... Args>
-        void format(Args&&... args) {
+        constexpr void format(Args&&... args) {
             ((*this) << ... << args);
         }
 
 
     private:
 
-        static uint64_t nearest_power_of_2(uint64_t n) {
+        static constexpr uint64_t nearest_power_of_2(uint64_t n) {
             if(n <= 2)
                 return 2;
             return std::bit_ceil(n);
@@ -149,8 +160,8 @@ namespace ufmt {
 
 
     template<class S>
-    basic_text<S>& operator << (basic_text<S>& self,
-                                typename S::value_type ch) {
+    constexpr basic_text<S>& operator << (basic_text<S>& self,
+                                          typename S::value_type ch) {
         typename S::value_type* p = self.allocate(1);
         if(!p)
             return self;
@@ -161,27 +172,45 @@ namespace ufmt {
 
 
     template<class S>
-    basic_text<S>& operator << (basic_text<S>& self, std::string_view sv) {
+    constexpr basic_text<S>& operator << (basic_text<S>& self, std::string_view sv) {
         return self.append(sv.data(), sv.size());
     }
 
 
     template<class S>
-    basic_text<S>& operator << (basic_text<S>& self, std::string const& s) {
+    constexpr basic_text<S>& operator << (basic_text<S>& self, std::string const& s) {
         return self.append(s.data(), s.size());
     }
 
 
     template<class S, std::size_t N>
-    basic_text<S>& operator << (basic_text<S>& self, char const (&cc)[N]) {
+    constexpr basic_text<S>& operator << (basic_text<S>& self, char const (&cc)[N]) {
         return self.append(cc, N - 1);
     }
 
 
     namespace detail {
 
+        // Integer path: constexpr when the standard library provides constexpr
+        // std::to_chars (C++23 P2291).
         template<std::size_t N, class S, typename T>
-        basic_text<S>& print_number(basic_text<S>& self, T value) {
+        UFMT_CONSTEXPR_NUM basic_text<S>& print_number(basic_text<S>& self, T value) {
+            typename S::value_type* p = self.allocate(N);
+            if(!p)
+                return self;
+            auto const r = std::to_chars(p, p + N, value);
+            if(r.ec == std::errc{})
+                self.free(r.ptr);
+            else
+                self.free(p);
+            return self;
+        }
+
+
+        // Floating-point path: std::to_chars for floats is never constexpr, so
+        // this stays runtime-only and is kept separate from print_number.
+        template<std::size_t N, class S, typename T>
+        basic_text<S>& print_float(basic_text<S>& self, T value) {
             typename S::value_type* p = self.allocate(N);
             if(!p)
                 return self;
@@ -195,7 +224,7 @@ namespace ufmt {
 
 
         template<class S, class Range>
-        basic_text<S>& print_range(basic_text<S>& self, Range const& value) {
+        constexpr basic_text<S>& print_range(basic_text<S>& self, Range const& value) {
             self << '[';
             if(!value.empty()) {
                 auto it = value.begin();
@@ -214,47 +243,47 @@ namespace ufmt {
     template<class S, std::integral T>
         requires(!std::same_as<T, bool>
                  && !std::same_as<T, typename S::value_type>)
-    basic_text<S>& operator << (basic_text<S>& self, T value) {
+    UFMT_CONSTEXPR_NUM basic_text<S>& operator << (basic_text<S>& self, T value) {
         constexpr std::size_t digits = std::numeric_limits<T>::digits10 + 3;
         return detail::print_number<digits>(self, value);
     }
 
 
     template<class S>
-    basic_text<S>& operator << (basic_text<S>& self, bool value) {
+    UFMT_CONSTEXPR_NUM basic_text<S>& operator << (basic_text<S>& self, bool value) {
         return self << std::int32_t(value);
     }
 
 
     template<class S>
     basic_text<S>& operator << (basic_text<S>& self, float value) {
-        return detail::print_number<64>(self, value);
+        return detail::print_float<64>(self, value);
     }
 
 
     template<class S>
     basic_text<S>& operator << (basic_text<S>& self, double value) {
-        return detail::print_number<64>(self, value);
+        return detail::print_float<64>(self, value);
     }
 
 
     template<class S, typename T>
-    basic_text<S>& operator << (basic_text<S>& self,
-                                std::vector<T> const& value) {
+    constexpr basic_text<S>& operator << (basic_text<S>& self,
+                                          std::vector<T> const& value) {
         return detail::print_range(self, value);
     }
 
 
     template<class S, typename T, std::size_t N>
-    basic_text<S>& operator << (basic_text<S>& self,
-                                std::array<T, N> const& value) {
+    constexpr basic_text<S>& operator << (basic_text<S>& self,
+                                          std::array<T, N> const& value) {
         return detail::print_range(self, value);
     }
 
 
     template<class S, typename T, std::size_t E>
-    basic_text<S>& operator << (basic_text<S>& self,
-                                std::span<T, E> const& value) {
+    constexpr basic_text<S>& operator << (basic_text<S>& self,
+                                          std::span<T, E> const& value) {
         return detail::print_range(self, value);
     }
 
@@ -269,7 +298,7 @@ namespace ufmt {
 
 
         template<class S, typename T>
-        basic_text<S>& operator << (basic_text<S>& self, left<T> l) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, left<T> l) {
             auto const original_size = self.size();
             self << l.value;
             auto const next_size = self.size();
@@ -290,7 +319,7 @@ namespace ufmt {
 
 
         template<class S, typename T>
-        basic_text<S>& operator << (basic_text<S>& self, right<T> r) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, right<T> r) {
             auto const original_size = self.size();
             self << r.value;
             auto const next_size = self.size();
@@ -345,7 +374,7 @@ namespace ufmt {
 
 
         template<class S, typename T>
-        basic_text<S>& operator << (basic_text<S>& self, fixed<T> f) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, fixed<T> f) {
             auto const original_size = self.size();
             self << f.value;
             auto const next_size = self.size();
@@ -374,7 +403,7 @@ namespace ufmt {
 
 
         template<class S, typename T>
-        basic_text<S>& operator << (basic_text<S>& self, quoted<T> q) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, quoted<T> q) {
             return self << '\'' << q.value << '\'';
         }
 
@@ -384,7 +413,7 @@ namespace ufmt {
 
 
         template<class S, typename T>
-        basic_text<S>& operator << (basic_text<S>& self, dquoted<T> q) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, dquoted<T> q) {
             return self << '\"' << q.value << '\"';
         }
 
@@ -392,60 +421,60 @@ namespace ufmt {
         struct textize { T const& value; };
 
         template<class S>
-        basic_text<S>& operator << (basic_text<S>& self, textize<char> arg) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, textize<char> arg) {
             return self << '\"' << arg.value << '\"';
         }
 
         template<class S>
-        basic_text<S>& operator << (basic_text<S>& self, textize<std::string_view> arg) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, textize<std::string_view> arg) {
             return self << '\"' << arg.value << '\"';
         }
 
         template<class S>
-        basic_text<S>& operator << (basic_text<S>& self, textize<std::string> arg) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, textize<std::string> arg) {
             return self << '\"' << arg.value << '\"';
         }
-        
-        
+
+
         template<class S, std::size_t N>
-        basic_text<S>& operator << (basic_text<S>& self, textize<fixed_string<N>> arg) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, textize<fixed_string<N>> arg) {
             return self << '\"' << arg.value << '\"';
         }
-        
-        
+
+
         template<class S, class T>
-        basic_text<S>& operator << (basic_text<S>& self, textize<basic_text<T>> arg) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, textize<basic_text<T>> arg) {
             return self << '\"' << arg.value << '\"';
         }
-        
+
 
         template<class S, typename T>
-        basic_text<S>& operator << (basic_text<S>& self, textize<T> arg) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, textize<T> arg) {
             return self << arg.value;
         }
-        
-        
+
+
         struct boolean {
             bool value;
         };
-        
-        
-        template<class S> S& operator << (S& self, boolean arg) {
+
+
+        template<class S> constexpr S& operator << (S& self, boolean arg) {
             if(arg.value)
                 return self << "true";
             else
                 return self << "false";
         }
-        
-        
+
+
         struct char_n {
             char c;
             std::size_t n;
         }; // char_n
-        
-        
+
+
         template<class S>
-        basic_text<S>& operator << (basic_text<S>& self, char_n arg) {
+        constexpr basic_text<S>& operator << (basic_text<S>& self, char_n arg) {
             self.char_n(arg.c, arg.n);
             return self;
         }
@@ -454,13 +483,13 @@ namespace ufmt {
 
 
     template<typename T>
-    formatters::left<T> left(T const& value, unsigned width) noexcept {
+    constexpr formatters::left<T> left(T const& value, unsigned width) noexcept {
         return formatters::left<T>{value, width};
     }
 
 
     template<typename T>
-    formatters::right<T> right(T const& value, unsigned width) noexcept {
+    constexpr formatters::right<T> right(T const& value, unsigned width) noexcept {
         return formatters::right<T>{value, width};
     }
 
@@ -469,47 +498,47 @@ namespace ufmt {
         return formatters::precised<double>{value, precision};
     }
 
-    inline formatters::fixed<std::int32_t> fixed(std::int32_t value, unsigned width) noexcept {
+    constexpr formatters::fixed<std::int32_t> fixed(std::int32_t value, unsigned width) noexcept {
         return formatters::fixed<std::int32_t>{value, unsigned(width)};
     }
 
-    inline formatters::fixed<std::uint32_t> fixed(std::uint32_t value, unsigned width) noexcept {
+    constexpr formatters::fixed<std::uint32_t> fixed(std::uint32_t value, unsigned width) noexcept {
         return formatters::fixed<std::uint32_t>{value, unsigned(width)};
     }
 
-    inline formatters::fixed<std::int64_t> fixed(std::int64_t value, unsigned width) noexcept {
+    constexpr formatters::fixed<std::int64_t> fixed(std::int64_t value, unsigned width) noexcept {
         return formatters::fixed<std::int64_t>{value, unsigned(width)};
     }
 
-    inline formatters::fixed<std::uint64_t> fixed(std::uint64_t value, unsigned width) noexcept {
+    constexpr formatters::fixed<std::uint64_t> fixed(std::uint64_t value, unsigned width) noexcept {
         return formatters::fixed<std::uint64_t>{value, unsigned(width)};
     }
 
 
     template<typename T>
-    formatters::quoted<T> quoted(T const& value) noexcept {
+    constexpr formatters::quoted<T> quoted(T const& value) noexcept {
         return formatters::quoted<T>{value};
     }
 
 
     template<typename T>
-    formatters::dquoted<T> dquoted(T const& value) noexcept {
+    constexpr formatters::dquoted<T> dquoted(T const& value) noexcept {
         return formatters::dquoted<T>{value};
     }
 
 
     template<typename T>
-    formatters::textize<T> textize(T const& value) noexcept {
+    constexpr formatters::textize<T> textize(T const& value) noexcept {
         return formatters::textize<T>{value};
     }
-    
-    
-    inline formatters::boolean boolean(bool value) noexcept {
+
+
+    constexpr formatters::boolean boolean(bool value) noexcept {
         return formatters::boolean{value};
     }
-    
-    
-    inline formatters::char_n char_n(char c, std::size_t n) {
+
+
+    constexpr formatters::char_n char_n(char c, std::size_t n) {
         return formatters::char_n{c, n};
     }
 	

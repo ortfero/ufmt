@@ -20,15 +20,21 @@ int main() {
     auto const texter_char = ubench::run([&] {
         text.clear();
         auto c = 'x';
+        ubench::dont_optimize(c);
         text.format(c);
+        ubench::dont_optimize(text.data());
     });
     auto const snprintf_char = ubench::run([&] {
         auto c = 'x';
+        ubench::dont_optimize(c);
         snprintf(charz, sizeof(charz), "%c", c);
+        ubench::dont_optimize(charz);
     });
     auto const fmt_char = ubench::run([&] {
         auto c = 'x';
+        ubench::dont_optimize(c);
         fmt::format_to(charz, "{}", c);
+        ubench::dont_optimize(charz);
     });
 
     cout << "texter.print(char)    - " << texter_char << '\n';
@@ -39,12 +45,15 @@ int main() {
     auto const texter_literal = ubench::run([&] {
         text.clear();
         text.format("some literal");
+        ubench::dont_optimize(text.data());
     });
     auto const snprintf_literal = ubench::run([&] {
         snprintf(charz, sizeof(charz), "%s", "some literal");
+        ubench::dont_optimize(charz);
     });
     auto const fmt_literal = ubench::run([&] {
         fmt::format_to(charz, "{}", "some literal");
+        ubench::dont_optimize(charz);
     });
 
     cout << "texter.print(<char[N]>)    - " << texter_literal << '\n';
@@ -55,18 +64,23 @@ int main() {
     auto const texter_int = ubench::run([&] {
         text.clear();
         text.format(rand());
+        ubench::dont_optimize(text.data());
     });
     auto const snprintf_int = ubench::run([&] {
         snprintf(charz, sizeof(charz), "%d", rand());
+        ubench::dont_optimize(charz);
     });
     auto const fmt_int = ubench::run([&] {
         fmt::format_to(charz, "{}", rand());
+        ubench::dont_optimize(charz);
     });
     auto const tochars_int = ubench::run([&] {
         std::to_chars(charz, charz + sizeof(charz), rand());
+        ubench::dont_optimize(charz);
     });
     auto const format_int = ubench::run([&] {
-       std::format_to(charz, "{}", rand());                                     
+       std::format_to(charz, "{}", rand());
+       ubench::dont_optimize(charz);
     });
 
     cout << "texter.print(<int>)     - " << texter_int << '\n';
@@ -79,18 +93,23 @@ int main() {
     auto const texter_double = ubench::run([&] {
         text.clear();
         text.format(rand() % 2 ? 123.123 : -123.123);
+        ubench::dont_optimize(text.data());
     });
     auto const snprintf_double = ubench::run([&] {
         std::snprintf(charz, sizeof(charz), "%f", rand() % 2 ? 123.123 : -123.123);
+        ubench::dont_optimize(charz);
     });
     auto const fmt_double = ubench::run([&] {
         fmt::format_to(charz, "{}", rand() % 2 ? 123.123 : -123.123);
+        ubench::dont_optimize(charz);
     });
     auto const to_chars_double = ubench::run([&] {
         std::to_chars(charz, charz + sizeof(charz), rand() % 2 ? 123.123 : -123.123);
+        ubench::dont_optimize(charz);
     });
     auto const format_double = ubench::run([&] {
        std::format_to(charz, "{}", rand() % 2 ? 123.123 : -123.123);
+       ubench::dont_optimize(charz);
     });
 
 
@@ -107,18 +126,21 @@ int main() {
             text.format("nums: ", 1, ", ", 123.123, ", ", std::string{"kaka"});
         else
             text.format("nums: ", -1, ", ", -123.123, ", ", std::string{"kuku"});
+        ubench::dont_optimize(text.data());
     });
     auto const snprintf_format = ubench::run([&] {
         if(rand() % 2)
             std::snprintf(charz, sizeof(charz), "nums: %d, %f, %s", 1, 123.123, std::string{"kaka"}.data());
         else
             std::snprintf(charz, sizeof(charz), "nums: %d, %f, %s", -1, -123.123, std::string{"kuku"}.data());
+        ubench::dont_optimize(charz);
     });
     auto const fmt_format = ubench::run([&] {
         if(rand() %2)
             fmt::format_to(charz, "nums: {}, {}, {}", 1, 123.123, std::string{"kaka"});
         else
             fmt::format_to(charz, "nums: {}, {}, {}", -1, -123.123, std::string{"kuku"});
+        ubench::dont_optimize(charz);
     });
 
     cout << "texter.print('nums: ', <int>, ', ', <double>, ', ', <string>)    - "

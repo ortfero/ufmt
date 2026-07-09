@@ -34,13 +34,16 @@ namespace ufmt {
 
         constexpr fixed_string() noexcept: n_(0) { p_[0] = '\0'; }
 
-        constexpr fixed_string(fixed_string const& rhs) noexcept {
-            assign(rhs.begin(), rhs.end());
+        // p_ is value-initialized so the whole buffer (not just the used
+        // prefix) is initialized; this lets a formatted fixed_string be stored
+        // in a constexpr variable. The unused tail stays zero.
+        constexpr fixed_string(fixed_string const& rhs) noexcept: n_(0), p_{} {
+            assign(rhs.data(), rhs.data() + rhs.size());
         }
 
         template<std::size_t M> constexpr
-        fixed_string(fixed_string<M> const& rhs) noexcept {
-            assign(rhs.begin(), rhs.end());
+        fixed_string(fixed_string<M> const& rhs) noexcept: n_(0), p_{} {
+            assign(rhs.data(), rhs.data() + rhs.size());
         }
 
         template<std::size_t M> constexpr

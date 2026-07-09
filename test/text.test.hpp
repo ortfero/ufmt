@@ -154,4 +154,25 @@ TEST_SUITE("text") {
         REQUIRE_EQ(t.view(), std::string_view{big});
     }
 
+
+    SCENARIO("Compile-time formatting") {
+        // Fixed-capacity backings can be formatted at compile time (integers,
+        // strings, chars, bools, ranges). Floats are intentionally runtime-only.
+        static_assert(ufmt::short_text::of('x') == "x");                    // single char
+        static_assert(ufmt::short_text::of("some literal") == "some literal"); // string literal
+        static_assert(ufmt::short_text::of("x=", 42) == "x=42");
+        static_assert(ufmt::short_text::of(-2147483647 - 1) == "-2147483648");
+        static_assert(ufmt::short_text::of(true) == "1");
+        static_assert(ufmt::short_text::of(ufmt::fixed(5, 3)) == "005");
+        static_assert(ufmt::short_text::of(ufmt::fixed(-5, 3)) == "-05");
+        static_assert(ufmt::short_text::of(std::array<int, 3>{1, 2, 3}) == "[ 1, 2, 3 ]");
+
+        constexpr auto s = ufmt::short_text::of(1, ',', 2, ',', 3);
+        static_assert(s == "1,2,3");
+
+        // Runtime mirrors, for readable failures if the above ever regress.
+        REQUIRE_EQ(ufmt::short_text::of("x=", 42), "x=42");
+        REQUIRE_EQ(ufmt::short_text::of(1, ',', 2, ',', 3), "1,2,3");
+    }
+
 }
